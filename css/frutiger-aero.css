@@ -1,33 +1,37 @@
 /* ============================================
-   Frutiger Aero — базові змінні та ефекти
-   Глянцеві градієнти, скло, природа, м'які тіні
-   Мінімальне використання пам'яті: без важких
-   зображень, тільки CSS-градієнти та rgba
+   Frutiger Aero — глянець, вода, небо, скло
+   Орієнтири: Windows Aero, Vista, early 2000s web
+   Без важких зображень — лише CSS
    ============================================ */
 
 :root {
-  /* Основна палітра Frutiger Aero */
-  --sky-top: #a8d8f0;
-  --sky-mid: #7ec8e3;
-  --sky-bot: #5bb5d4;
-  --grass: #8fbc8f;
-  --leaf: #6b9b6b;
-  --water: #4a90a4;
-  --glass: rgba(255, 255, 255, 0.55);
-  --glass-strong: rgba(255, 255, 255, 0.75);
-  --glass-dark: rgba(255, 255, 255, 0.25);
-  --border-glass: rgba(255, 255, 255, 0.65);
-  --text-dark: #1a3a4a;
-  --text-muted: #3d5a6a;
-  --accent: #2e8bc0;
-  --accent-soft: #5dade2;
-  --pink-glow: #f8a5c2;
-  --green-glow: #82e0aa;
-  --shadow: 0 8px 32px rgba(30, 90, 120, 0.18);
-  --shadow-soft: 0 4px 16px rgba(30, 90, 120, 0.12);
-  --radius: 18px;
-  --radius-sm: 12px;
-  --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --sky-top: #c5e8f7;
+  --sky-mid: #7ec8e8;
+  --sky-bot: #4aa8d0;
+  --horizon: #a8dcc0;
+  --water: #5eb8d4;
+  --foam: rgba(255, 255, 255, 0.55);
+  --glass: linear-gradient(165deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(220, 240, 255, 0.45) 45%,
+    rgba(180, 220, 240, 0.35) 100%);
+  --glass-solid: rgba(255, 255, 255, 0.48);
+  --glass-strong: rgba(255, 255, 255, 0.78);
+  --border-glass: rgba(255, 255, 255, 0.85);
+  --border-soft: rgba(120, 180, 210, 0.35);
+  --text-dark: #1a3d52;
+  --text-muted: #4a6f82;
+  --accent: #2a9fd6;
+  --accent-soft: #6ec8ef;
+  --shine: rgba(255, 255, 255, 0.9);
+  --shadow: 0 10px 40px rgba(40, 100, 140, 0.22),
+            0 2px 8px rgba(40, 100, 140, 0.12);
+  --shadow-soft: 0 4px 18px rgba(40, 100, 140, 0.14);
+  --inset-shine: inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                 inset 0 -1px 0 rgba(80, 140, 180, 0.12);
+  --radius: 20px;
+  --radius-sm: 14px;
+  --font: "Segoe UI", "Lucida Grande", "Helvetica Neue", Arial, sans-serif;
 }
 
 *, *::before, *::after {
@@ -40,34 +44,97 @@ html, body {
   height: 100%;
   font-family: var(--font);
   color: var(--text-dark);
-  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-bot) 100%);
-  background-attachment: fixed;
   overflow: hidden;
 }
 
-/* Скляні панелі */
+/* Багатошарове небо + «вода» внизу */
+body {
+  background:
+    radial-gradient(ellipse 120% 60% at 50% -10%,
+      rgba(255, 255, 255, 0.7) 0%,
+      transparent 55%),
+    radial-gradient(ellipse 80% 40% at 15% 30%,
+      rgba(160, 230, 200, 0.35) 0%,
+      transparent 50%),
+    radial-gradient(ellipse 70% 35% at 85% 25%,
+      rgba(140, 200, 240, 0.4) 0%,
+      transparent 50%),
+    linear-gradient(180deg,
+      var(--sky-top) 0%,
+      var(--sky-mid) 38%,
+      var(--horizon) 72%,
+      var(--sky-bot) 100%);
+  background-attachment: fixed;
+  transition: background 0.7s ease;
+}
+
+/* Легкі «бульбашки» / відблиски (псевдо, без JS) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle 180px at 12% 78%, rgba(255,255,255,0.22) 0%, transparent 70%),
+    radial-gradient(circle 120px at 88% 65%, rgba(255,255,255,0.18) 0%, transparent 70%),
+    radial-gradient(circle 90px at 70% 18%, rgba(255,255,255,0.25) 0%, transparent 65%),
+    radial-gradient(circle 60px at 30% 12%, rgba(200, 255, 230, 0.2) 0%, transparent 60%);
+  opacity: 0.9;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Скло Aero ===== */
 .glass {
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--glass-solid);
+  background-image: var(--glass);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
   border: 1px solid var(--border-glass);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), var(--inset-shine);
   border-radius: var(--radius);
+  position: relative;
+}
+
+/* Верхній глянцевий блік на панелях */
+.glass::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 42%;
+  border-radius: var(--radius) var(--radius) 40% 40%;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.12) 55%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass > * {
+  position: relative;
+  z-index: 1;
 }
 
 .glass-strong {
   background: var(--glass-strong);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
 }
 
-/* Кнопки в стилі Aero */
+/* ===== Кнопки Vista/Aero ===== */
 button {
   font-family: inherit;
   cursor: pointer;
   border: none;
   outline: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
 button:active {
@@ -75,36 +142,84 @@ button:active {
 }
 
 .btn {
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #e8f4fc 0%, #b8d9f0 100%);
-  border: 1px solid rgba(255,255,255,0.8);
-  box-shadow: 0 2px 8px rgba(30,90,120,0.15), inset 0 1px 0 rgba(255,255,255,0.7);
+  background: linear-gradient(180deg,
+    #ffffff 0%,
+    #e3f2fc 35%,
+    #b8daf0 70%,
+    #9ecce8 100%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 2px 10px rgba(40, 110, 150, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -2px 4px rgba(80, 140, 180, 0.15);
   color: var(--text-dark);
   font-size: 0.9rem;
+  font-weight: 600;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .btn:hover {
-  background: linear-gradient(180deg, #f0f8ff 0%, #c5e3f5 100%);
+  filter: brightness(1.06);
+  box-shadow:
+    0 4px 14px rgba(40, 110, 150, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .btn-danger {
-  background: linear-gradient(180deg, #fce8e8 0%, #f0b8b8 100%);
-  color: #8b2e2e;
+  background: linear-gradient(180deg, #fff5f5 0%, #fcd0d0 45%, #f0a0a0 100%);
+  color: #8b2a2a;
+  border: 1px solid rgba(255, 220, 220, 0.95);
+  box-shadow:
+    0 2px 10px rgba(160, 60, 60, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .btn-danger:hover {
-  background: linear-gradient(180deg, #fff0f0 0%, #f5c5c5 100%);
+  filter: brightness(1.05);
 }
 
-/* Аватари — кружечки з глянцем */
+/* Навігація */
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  text-align: left;
+  border: 1px solid transparent;
+}
+
+.nav-btn:hover {
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.28));
+  border-color: rgba(255,255,255,0.6);
+  box-shadow: var(--inset-shine);
+}
+
+.nav-btn.active {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(200, 230, 250, 0.55) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-soft), var(--inset-shine);
+  font-weight: 600;
+}
+
+/* ===== Аватари з глянцем ===== */
 .avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #cce5f5, #8ab8d0);
-  border: 2px solid rgba(255,255,255,0.9);
-  box-shadow: 0 4px 12px rgba(30,90,120,0.2), inset 0 -2px 6px rgba(0,0,0,0.08);
+  background: linear-gradient(160deg, #e8f6ff 0%, #a8d4ec 50%, #7eb8d8 100%);
+  border: 2.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 4px 14px rgba(40, 100, 140, 0.25),
+    inset 0 -3px 8px rgba(30, 80, 120, 0.15),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,31 +232,33 @@ button:active {
 .avatar::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 45%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
-  border-radius: 50% 50% 0 0;
+  top: 2px;
+  left: 12%;
+  right: 12%;
+  height: 42%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.75), transparent);
+  border-radius: 50% 50% 40% 40%;
+  pointer-events: none;
 }
 
 .avatar.online::before {
   content: "";
   position: absolute;
-  bottom: 2px;
-  right: 2px;
+  bottom: 1px;
+  right: 1px;
   width: 12px;
   height: 12px;
-  background: #2ecc71;
+  background: radial-gradient(circle at 35% 35%, #7dffb0, #22c55e 60%, #15803d);
   border: 2px solid white;
   border-radius: 50%;
-  z-index: 1;
+  z-index: 2;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
 .avatar.lg {
-  width: 80px;
-  height: 80px;
-  font-size: 2.2rem;
+  width: 84px;
+  height: 84px;
+  font-size: 2.3rem;
 }
 
 .avatar.sm {
@@ -150,24 +267,25 @@ button:active {
   font-size: 1rem;
 }
 
-/* Статуси */
+/* Статус-пілюлі */
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 999px;
   font-size: 0.8rem;
-  background: rgba(255,255,255,0.6);
-  border: 1px solid rgba(255,255,255,0.8);
+  background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.4));
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
   color: var(--text-muted);
 }
 
-/* Типінг-індикатор */
+/* Типінг */
 .typing {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 8px 12px;
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -175,10 +293,11 @@ button:active {
 
 .typing-dots span {
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: var(--accent);
+  width: 7px;
+  height: 7px;
+  background: linear-gradient(180deg, var(--accent-soft), var(--accent));
   border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(40, 120, 180, 0.35);
   animation: bounce 1.2s infinite ease-in-out;
 }
 
@@ -186,72 +305,129 @@ button:active {
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes bounce {
-  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-  40% { transform: translateY(-5px); opacity: 1; }
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+  40% { transform: translateY(-6px); opacity: 1; }
 }
 
-/* Скролбар у стилі Aero */
-::-webkit-scrollbar {
-  width: 8px;
-}
+/* Скролбар Aero */
+::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.5);
-  border-radius: 4px;
-  border: 1px solid rgba(255,255,255,0.3);
+  background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(160, 200, 230, 0.55));
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.7);
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(180, 215, 240, 0.7));
 }
 
-/* ============================================
-   Теми за настроєм (легкі CSS-змінні)
-   ============================================ */
+/* ===== Теми настрою (збережений Aero-глянець) ===== */
 body.theme-pink {
-  --sky-top: #f8d0e0; --sky-mid: #f0a8c8; --sky-bot: #e890b0;
-  --glass: rgba(255, 230, 240, 0.6); --accent: #d46a9a; --text-dark: #4a2035;
+  --sky-top: #fde4ef; --sky-mid: #f5b8d0; --sky-bot: #e890b8;
+  --horizon: #f8c8d8;
+  --glass-solid: rgba(255, 236, 244, 0.52);
+  --accent: #d45a9a; --text-dark: #4a2040;
 }
 body.theme-green {
-  --sky-top: #c8e8d0; --sky-mid: #90d0a0; --sky-bot: #70b880;
-  --glass: rgba(230, 255, 240, 0.55); --accent: #2e8b57; --text-dark: #1a3a28;
+  --sky-top: #d8f5e4; --sky-mid: #90dcb0; --sky-bot: #58b878;
+  --horizon: #b8e8c8;
+  --glass-solid: rgba(230, 255, 240, 0.5);
+  --accent: #2d9a5c; --text-dark: #1a3d28;
 }
 body.theme-silver {
-  --sky-top: #d8e0e8; --sky-mid: #b0c0d0; --sky-bot: #90a0b0;
-  --glass: rgba(240, 245, 250, 0.6); --accent: #5a7a9a; --text-dark: #2a3a4a;
+  --sky-top: #e4ecf4; --sky-mid: #b8c8d8; --sky-bot: #90a4b8;
+  --horizon: #c8d4e0;
+  --glass-solid: rgba(245, 248, 252, 0.55);
+  --accent: #5a7e9a; --text-dark: #2a3a4a;
 }
 body.theme-blue {
-  --sky-top: #a0c8e8; --sky-mid: #70a0d0; --sky-bot: #5080b0;
-  --glass: rgba(200, 220, 240, 0.55); --accent: #3a6a9a; --text-dark: #1a2a4a;
+  --sky-top: #c0daf0; --sky-mid: #78a8d8; --sky-bot: #4a80b8;
+  --horizon: #98c0e0;
+  --glass-solid: rgba(210, 228, 245, 0.5);
+  --accent: #3a6fa0; --text-dark: #1a2e48;
 }
 body.theme-cyan {
-  --sky-top: #b0e8f0; --sky-mid: #70d0e0; --sky-bot: #40b0c8;
-  --glass: rgba(220, 245, 250, 0.55); --accent: #2a9ab0; --text-dark: #1a3a45;
+  --sky-top: #c8f0f8; --sky-mid: #70d4e8; --sky-bot: #38b0c8;
+  --horizon: #a0e0ec;
+  --glass-solid: rgba(220, 248, 252, 0.5);
+  --accent: #1a9ab0; --text-dark: #143a45;
 }
 body.theme-red {
-  --sky-top: #f0c0c0; --sky-mid: #e09090; --sky-bot: #c07070;
-  --glass: rgba(255, 230, 230, 0.55); --accent: #c04040; --text-dark: #4a1a1a;
+  --sky-top: #f8d8d8; --sky-mid: #e8a0a0; --sky-bot: #c87070;
+  --horizon: #f0b8b8;
+  --glass-solid: rgba(255, 236, 236, 0.52);
+  --accent: #c04040; --text-dark: #4a1c1c;
 }
 body.theme-yellow {
-  --sky-top: #f8e8b0; --sky-mid: #f0d070; --sky-bot: #e0b040;
-  --glass: rgba(255, 250, 220, 0.6); --accent: #c09020; --text-dark: #4a3a10;
+  --sky-top: #fef3c8; --sky-mid: #f0d070; --sky-bot: #e0a838;
+  --horizon: #f8e0a0;
+  --glass-solid: rgba(255, 250, 230, 0.55);
+  --accent: #c09018; --text-dark: #4a3808;
 }
 body.theme-black {
-  --sky-top: #3a3a4a; --sky-mid: #2a2a35; --sky-bot: #1a1a22;
-  --glass: rgba(40, 40, 50, 0.7); --glass-strong: rgba(50, 50, 60, 0.8);
-  --border-glass: rgba(80, 80, 100, 0.5); --accent: #8090a0;
-  --text-dark: #d0d0e0; --text-muted: #9090a0;
+  --sky-top: #3a4258; --sky-mid: #2a3045; --sky-bot: #1a1e2e;
+  --horizon: #323850;
+  --glass-solid: rgba(45, 50, 68, 0.72);
+  --glass: linear-gradient(165deg, rgba(70,75,95,0.75), rgba(40,45,60,0.5));
+  --border-glass: rgba(120, 130, 160, 0.45);
+  --accent: #88a0c0;
+  --text-dark: #e0e6f0; --text-muted: #98a0b8;
+  --shine: rgba(255, 255, 255, 0.15);
 }
 body.theme-purple {
-  --sky-top: #d0c0e0; --sky-mid: #a090c0; --sky-bot: #8070a0;
-  --glass: rgba(230, 220, 245, 0.55); --accent: #7a5a9a; --text-dark: #2a1a3a;
+  --sky-top: #e4d8f5; --sky-mid: #b098d8; --sky-bot: #8060b0;
+  --horizon: #c8b8e8;
+  --glass-solid: rgba(236, 228, 250, 0.52);
+  --accent: #7a50a8; --text-dark: #2e1a45;
 }
 body.theme-orange {
-  --sky-top: #f8d8b0; --sky-mid: #f0b070; --sky-bot: #e09040;
-  --glass: rgba(255, 240, 220, 0.6); --accent: #d07020; --text-dark: #4a2a10;
+  --sky-top: #ffe8cc; --sky-mid: #f0b878; --sky-bot: #e08840;
+  --horizon: #f8d0a0;
+  --glass-solid: rgba(255, 244, 228, 0.55);
+  --accent: #d07020; --text-dark: #4a2c0c;
 }
 
-body {
-  transition: background 0.6s ease;
+/* Повідомлення з глянцем */
+.msg.mine {
+  background: linear-gradient(165deg, #dff2ff 0%, #b0daf0 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 10px rgba(40, 110, 160, 0.15), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.msg.theirs {
+  background: linear-gradient(165deg, rgba(255,255,255,0.75), rgba(255,255,255,0.45)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(40, 100, 140, 0.1), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* Картки постів */
+.post-card {
+  background-image: var(--glass) !important;
+}
+
+.tab.active {
+  background: linear-gradient(180deg, #ffffff, #c8e4f5) !important;
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 #fff;
+}
+
+.gallery-item {
+  background: linear-gradient(145deg, #e0f2fc, #8ec8e8) !important;
+  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: var(--shadow-soft), inset 0 2px 6px rgba(255,255,255,0.4) !important;
+}
+
+.char-card {
+  background: linear-gradient(165deg, rgba(255,255,255,0.65), rgba(200,230,250,0.35)) !important;
+  border: 1px solid rgba(255,255,255,0.8) !important;
+  box-shadow: var(--shadow-soft), var(--inset-shine) !important;
+}
+
+.char-card:hover {
+  background: linear-gradient(165deg, rgba(255,255,255,0.9), rgba(210,235,255,0.55)) !important;
+  border-color: var(--accent-soft) !important;
 }

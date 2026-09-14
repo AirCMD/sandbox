@@ -49,7 +49,7 @@ const UI = {
       <div class="avatar lg online" style="background:linear-gradient(145deg,${c.color}88,${c.color})">${c.emoji}</div>
       <div>
         <div class="name">${c.name}</div>
-        <div class="mood">${s.mood} · ${s.status}</div>
+        <div class="mood">${engine.moodLabel(s.mood, c.gender)} · ${s.status}</div>
         <div class="status-pill" style="margin-top:4px">💭 ${s.thought}</div>
       </div>
     `;
@@ -150,7 +150,7 @@ const UI = {
         <div class="profile-stats">
           <span><strong>${engine.posts.filter(p => p.author === this.playerId).length}</strong> дописів</span>
           <span><strong>${s.friends.length}</strong> друзів</span>
-          <span>${s.mood}</span>
+          <span>${engine.moodLabel(s.mood, c.gender)}</span>
         </div>
       </div>
     `;
@@ -242,7 +242,7 @@ const UI = {
       <div class="profile-info">
         <h2>${c.name}</h2>
         <div class="bio">${c.bio}</div>
-        <div class="status-pill" style="margin-top:8px">${s.status} · ${s.mood}</div>
+        <div class="status-pill" style="margin-top:8px">${s.status} · ${engine.moodLabel(s.mood, c.gender)}</div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn" id="btn-message">Написати</button>
           <button class="btn" id="btn-toggle-friend">${["friend","close","crush"].includes(rel) ? "Видалити з друзів" : "Додати в друзі"}</button>
@@ -289,7 +289,9 @@ const UI = {
     GALLERY.forEach(item => {
       const el = document.createElement("div");
       el.className = "gallery-item";
-      el.innerHTML = item.emoji + '<span class="likes">♥ ' + (3 + (item.id % 9)) + "</span>";
+      const count = engine.getGalleryLikeCount(item.id);
+      const liked = engine.hasGalleryLike(item.id, this.playerId);
+      el.innerHTML = item.emoji + '<span class="likes">' + (liked ? "❤️" : "♥") + " " + count + "</span>";
       el.onclick = () => this.openGalleryModal(item);
       grid.appendChild(el);
     });
@@ -298,17 +300,45 @@ const UI = {
   openGalleryModal(item) {
     engine.track("gallery");
     const author = engine.getCharacter(item.author);
+    const liked = engine.hasGalleryLike(item.id, this.playerId);
+    const count = engine.getGalleryLikeCount(item.id);
+    const likers = [...(engine.galleryLikes[item.id] || [])]
+      .map(id => engine.getCharacter(id)?.name?.split(" ")[0])
+      .filter(Boolean)
+      .slice(0, 5)
+      .join(", ");
     document.getElementById("modal-body").innerHTML = `
       <div style="font-size:4rem;text-align:center;margin-bottom:12px">${item.emoji}</div>
-      <p><strong>${author.name}</strong></p>
+      <p><strong class="author" data-id="${item.author}" style="cursor:pointer">${author.name}</strong></p>
       <p style="margin:8px 0">${item.desc}</p>
       <p style="font-size:0.85rem;color:var(--text-muted)">Теги: ${item.tags.join(", ")}</p>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:6px" id="gallery-like-info">
+        ${count ? "❤️ " + count + (likers ? " · " + likers : "") : "Поки без вподобайок"}
+      </p>
       <div style="margin-top:16px">
-        <button class="btn">🤍 Подобається</button>
-        <button class="btn-danger" style="margin-left:8px">Скарга</button>
+        <button class="btn" id="btn-gallery-like">${liked ? "❤️ Подобається" : "🤍 Подобається"}</button>
+        <button class="btn-danger" style="margin-left:8px" id="btn-gallery-report">Скарга</button>
       </div>
     `;
     document.getElementById("gallery-modal").hidden = false;
+
+    const likeBtn = document.getElementById("btn-gallery-like");
+    likeBtn.onclick = () => {
+      const nowLiked = engine.toggleGalleryLike(item.id, this.playerId);
+      const n = engine.getGalleryLikeCount(item.id);
+      likeBtn.textContent = nowLiked ? "❤️ Подобається" : "🤍 Подобається";
+      const names = [...(engine.galleryLikes[item.id] || [])]
+        .map(id => engine.getCharacter(id)?.name?.split(" ")[0])
+        .filter(Boolean)
+        .slice(0, 5)
+        .join(", ");
+      const info = document.getElementById("gallery-like-info");
+      if (info) info.textContent = n ? "❤️ " + n + (names ? " · " + names : "") : "Поки без вподобайок";
+      this.renderGallery();
+    };
+    document.getElementById("btn-gallery-report").onclick = () => {
+      alert("Скаргу надіслано. Модератори (тобто ніхто) подивляться… колись.");
+    };
   },
 
   renderMessagesList(filterQuery) {
@@ -403,13 +433,23 @@ const UI = {
     this.renderChatMessages();
 
     const decision = engine.botMayReply(this.playerId, this.currentChatId);
-    if (!decision || decision.type === "ignore") return;
-
     const box = document.getElementById("chat-messages");
+    const name = engine.getCharacter(this.currentChatId)?.name?.split(" ")[0] || "";
+
+    // Офлайн — без набору і без відповіді
+    if (!decision || decision.type === "offline") {
+      const note = document.createElement("div");
+      note.className = "msg system";
+      note.textContent = name + " зараз не в мережі. Повідомлення чекатиме.";
+      box.appendChild(note);
+      box.scrollTop = box.scrollHeight;
+      return;
+    }
+    if (decision.type === "ignore") return;
+
     const typing = document.createElement("div");
     typing.className = "typing";
     typing.id = "typing-indicator";
-    const name = engine.getCharacter(this.currentChatId).name.split(" ")[0];
     typing.innerHTML = `<span>${name} набирає повідомлення</span>
       <span class="typing-dots"><span></span><span></span><span></span></span>`;
     box.appendChild(typing);
@@ -426,6 +466,11 @@ const UI = {
     }
 
     setTimeout(() => {
+      // Якщо за час набору вийшов з мережі — відповіді немає
+      if (!engine.getState(this.currentChatId)?.online) {
+        typing.remove();
+        return;
+      }
       typing.remove();
       engine.messages[key].push({ from: this.currentChatId, text: decision.text, read: true, ts: Date.now() });
       const last = engine.messages[key].filter(m => m.from === this.playerId).pop();
@@ -512,8 +557,9 @@ const UI = {
     const view = document.getElementById("view-" + name);
     if (view) view.classList.add("active");
     document.querySelectorAll(".nav-btn").forEach(b => {
-      b.classList.toggle("active", b.dataset.view === name);
+      b.classList.toggle("active", b.dataset.view === name || (name === "chat" && b.dataset.view === "messages"));
     });
+    document.body.classList.toggle("chat-open", name === "chat");
     if (name === "feed") this.renderFeed();
     if (name === "profile") this.renderProfile();
     if (name === "gallery") this.renderGallery();

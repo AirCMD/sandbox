@@ -13,6 +13,8 @@ class BotEngine {
     this.meetings = [];
     this.activeGames = [];
     this.gossipLog = [];
+    // Лайки галереї: { itemId: Set of userIds }
+    this.galleryLikes = {};
     // Статистика гравця для досягнень
     this.stats = {
       likes: 0,
@@ -35,6 +37,7 @@ class BotEngine {
     };
     this.loadStats();
     this.init();
+    this.initGalleryLikes();
   }
 
   loadStats() {
@@ -113,7 +116,7 @@ class BotEngine {
       this.state[c.id] = {
         mood: c.defaultMood,
         status: this.pickStatus(c),
-        thought: this.pickThought(c.defaultMood),
+        thought: this.pickThought(c.defaultMood, c.gender),
         online: this.shouldBeOnline(c),
         lastActive: now - Math.random() * 3600000,
         friends: Object.entries(this.relations[c.id] || {})
@@ -145,17 +148,26 @@ class BotEngine {
     if (char.isOwl && this.isDay()) {
       return ["сплю", "не турбувати", "відпочиваю"][Math.floor(Math.random() * 3)];
     }
-    const pool = STATUSES.filter(s => {
-      if (char.gender === "m" && s.includes("втомлена")) return false;
-      if (char.gender === "f" && s.includes("втомлений")) return false;
-      return true;
-    });
+    const personal = STATUS_BY_CHAR[char.id] || [];
+    const common = char.gender === "m" ? STATUS_COMMON_M : STATUS_COMMON_F;
+    // 70% шанс особистого статусу, 30% побутового
+    const pool = Math.random() < 0.7 && personal.length
+      ? personal
+      : [...personal, ...common];
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  pickThought(mood) {
+  pickThought(mood, gender = "f") {
     const list = THOUGHTS[mood] || THOUGHTS["спокійний"];
-    return list[Math.floor(Math.random() * list.length)];
+    let t = list[Math.floor(Math.random() * list.length)];
+    if (gender === "f") {
+      t = t.replace(/нього\/неї/g, "нього")
+           .replace(/першим\/першою/g, "першою");
+    } else {
+      t = t.replace(/нього\/неї/g, "неї")
+           .replace(/першим\/першою/g, "першим");
+    }
+    return t;
   }
 
   shouldBeOnline(char) {
@@ -184,24 +196,98 @@ class BotEngine {
       if (rel === "blocked") return;
       comments.push({
         author: c.id,
-        text: this.makeComment(rel, this.state[c.id]?.mood || "спокійний", post.text)
+        text: this.makeComment(rel, this.state[c.id]?.mood || "спокійний", post.text, c.id)
       });
     });
     return comments.slice(0, 4);
   }
 
-  makeComment(rel, mood, postText) {
-    if (rel === "annoyed") return ["Серйозно?", "Бісить вже", "Не читай це."][Math.floor(Math.random()*3)];
-    if (rel === "crush") return ["Ти завжди так пишеш... ✨", "Подобається", "Згадав/згадала тебе"][Math.floor(Math.random()*3)];
-    if (rel === "close") return ["Кіса, ти топ 💕", "Розкажи детальніше!", "Я з тобою"][Math.floor(Math.random()*3)];
-    if (mood === "сумний") return ["Розумію...", "Тримайся", "Я поруч"];
-    if (mood === "веселий") return ["Хаха 😂", "Це смішно!", "Підтримую!"];
-    if (mood === "злий" || mood === "роздратований") return ["Ну ок", "Ага", "Цікаво..."];
-    return ["Круто", "Згоден/згодна", "Гарно", "👍"][Math.floor(Math.random()*4)];
+  /** Підставляє форми за статтю мовця: m / f */
+  genderize(text, gender) {
+    if (!text) return text;
+    if (gender === "f") {
+      return text
+        .replace(/Згадав\/згадала/g, "Згадала")
+        .replace(/Думав\/думала/g, "Думала")
+        .replace(/хотів\/хотіла/g, "хотіла")
+        .replace(/Готовий\/готова/g, "Готова")
+        .replace(/Заряджений\/а/g, "Заряджена")
+        .replace(/важливий\/важлива/g, "важлива")
+        .replace(/згоден\/згодна/g, "згодна")
+        .replace(/\bЗгоден\b/g, "Згодна")
+        .replace(/\bзгоден\b/g, "згодна")
+        .replace(/\bДумав\b/g, "Думала")
+        .replace(/\bдумав\b/g, "думала")
+        .replace(/\bЗгадав\b/g, "Згадала")
+        .replace(/\bГотовий\b/g, "Готова")
+        .replace(/\bЗаряджений\b/g, "Заряджена")
+        .replace(/\bрідненька\b/g, "рідненька")
+        .replace(/\bСкучила\b/g, "Скучила")
+        .replace(/\bчула\b/g, "чула")
+        .replace(/вільна(?!\w)/g, "вільна");
+    }
+    // male
+    return text
+      .replace(/Згадав\/згадала/g, "Згадав")
+      .replace(/Думав\/думала/g, "Думав")
+      .replace(/хотів\/хотіла/g, "хотів")
+      .replace(/Готовий\/готова/g, "Готовий")
+      .replace(/Заряджений\/а/g, "Заряджений")
+      .replace(/важливий\/важлива/g, "важливий")
+      .replace(/згоден\/згодна/g, "згоден")
+      .replace(/\bЗгодна\b/g, "Згоден")
+      .replace(/\bзгодна\b/g, "згоден")
+      .replace(/\bДумала\b/g, "Думав")
+      .replace(/\bдумала\b/g, "думав")
+      .replace(/\bЗгадала\b/g, "Згадав")
+      .replace(/\bГотова\b/g, "Готовий")
+      .replace(/\bЗаряджена\b/g, "Заряджений")
+      .replace(/Привіт, рідненька/g, "Привіт")
+      .replace(/\bСкучила\b/g, "Скучив")
+      .replace(/\bСкучила трохи\b/g, "Скучив трохи")
+      .replace(/\bЗгадувала тебе\b/g, "Згадував тебе")
+      .replace(/\bЖарт чула\?/g, "Жарт чув?")
+      .replace(/коли будеш вільна/g, "коли будеш вільний")
+      .replace(/Ти мені важлива/g, "Ти мені важливий");
+  }
+
+  makeComment(rel, mood, postText, speakerId) {
+    const gender = this.getCharacter(speakerId)?.gender || "f";
+    let pool;
+    if (rel === "annoyed") pool = ["Серйозно?", "Бісить вже", "Не читай це."];
+    else if (rel === "crush") pool = ["Ти завжди так пишеш... ✨", "Подобається", "Згадав/згадала тебе"];
+    else if (rel === "close") pool = gender === "f"
+      ? ["Кіса, ти топ 💕", "Розкажи детальніше!", "Я з тобою"]
+      : ["Ти топ", "Розкажи детальніше!", "Я з тобою"];
+    else if (mood === "сумний") pool = ["Розумію...", "Тримайся", "Я поруч"];
+    else if (mood === "веселий") pool = ["Хаха 😂", "Це смішно!", "Підтримую!"];
+    else if (mood === "злий" || mood === "роздратований") pool = ["Ну ок", "Ага", "Цікаво..."];
+    else pool = ["Круто", "Згоден/згодна", "Гарно", "👍"];
+    return this.genderize(pool[Math.floor(Math.random() * pool.length)], gender);
   }
 
   getCharacter(id) { return CHARACTERS.find(c => c.id === id); }
   getState(id) { return this.state[id]; }
+
+  /** Відмінювання настрою для відображення */
+  moodLabel(mood, gender) {
+    if (!mood) return "";
+    if (gender === "f") {
+      const map = {
+        закоханий: "закохана", щасливий: "щаслива", веселий: "весела",
+        спокійний: "спокійна", сумний: "сумна", натхненний: "натхненна",
+        творчий: "творча", злий: "зла", роздратований: "роздратована",
+        тривожний: "тривожна", панічний: "у паніці", закритий: "закрита",
+        байдужий: "байдужа", соціальний: "соціальна", енергійний: "енергійна",
+        нейтральний: "нейтральна"
+      };
+      return map[mood] || mood;
+    }
+    const mapM = {
+      апатія: "в апатії", панічний: "у паніці"
+    };
+    return mapM[mood] || mood;
+  }
 
   getRelation(from, to) {
     if (this.blocked[from]?.has(to) || this.blocked[to]?.has(from)) return "blocked";
@@ -223,6 +309,40 @@ class BotEngine {
         if (post.author === "derek" && post.text.includes("біс")) this.track("see_drama");
       }
     }
+  }
+
+  initGalleryLikes() {
+    if (typeof GALLERY === "undefined") return;
+    GALLERY.forEach(item => {
+      const set = new Set();
+      // кілька випадкових лайків від ботів
+      CHARACTERS.forEach(c => {
+        if (c.id !== item.author && Math.random() > 0.55) set.add(c.id);
+      });
+      this.galleryLikes[item.id] = set;
+    });
+  }
+
+  getGalleryLikeCount(itemId) {
+    return (this.galleryLikes[itemId] || new Set()).size;
+  }
+
+  hasGalleryLike(itemId, userId) {
+    return (this.galleryLikes[itemId] || new Set()).has(userId);
+  }
+
+  toggleGalleryLike(itemId, userId) {
+    if (!this.galleryLikes[itemId]) this.galleryLikes[itemId] = new Set();
+    const set = this.galleryLikes[itemId];
+    if (set.has(userId)) {
+      set.delete(userId);
+      return false;
+    }
+    set.add(userId);
+    if (userId === (typeof UI !== "undefined" ? UI.playerId : null)) {
+      this.track("likes");
+    }
+    return true;
   }
 
   addPost(authorId, text) {
@@ -249,7 +369,7 @@ class BotEngine {
       if (Math.random() > 0.6) {
         post.comments.push({
           author: c.id,
-          text: this.makeComment(rel, this.state[c.id].mood, post.text)
+          text: this.makeComment(rel, this.state[c.id].mood, post.text, c.id)
         });
       }
     });
@@ -257,6 +377,8 @@ class BotEngine {
 
   /* ---- Месенджер ---- */
   getQuickReplies(fromId, toId) {
+    const speaker = this.getCharacter(fromId);
+    const gender = speaker?.gender || "f";
     const pairKey = [fromId, toId].sort().join("_");
     const special = SPECIAL_DIALOGS[`${fromId}_${toId}`] || SPECIAL_DIALOGS[pairKey];
     const rel = this.getRelation(fromId, toId);
@@ -266,26 +388,29 @@ class BotEngine {
     if (special && Math.random() > 0.4) {
       list = [...special.slice(0, 3), ...list].slice(0, 6);
     }
-    // Додати репліки про інтереси
     const target = this.getCharacter(toId);
     if (target && Math.random() > 0.5) {
       const interest = target.interests[Math.floor(Math.random() * target.interests.length)];
       list.push(`Як там з «${interest}»?`);
     }
-    return [...new Set(list)].slice(0, 6);
+    return [...new Set(list.map(t => this.genderize(t, gender)))].slice(0, 6);
   }
 
   botMayReply(fromId, toId) {
+    // Офлайн — не читає і не відповідає
+    if (!this.state[toId]?.online) {
+      return { type: "offline" };
+    }
     const rel = this.getRelation(toId, fromId);
     if (rel === "blocked") return null;
     const mood = this.state[toId]?.mood;
+    const gender = this.getCharacter(toId)?.gender || "f";
     if (["закритий", "апатія", "злий"].includes(mood) && Math.random() < 0.55) return { type: "ignore" };
     if (rel === "annoyed" && Math.random() < 0.7) return { type: "ignore" };
     if (Math.random() < 0.18) return { type: "read_only" };
     if (Math.random() < 0.12) return { type: "typing_then_cancel" };
 
     const delay = 1200 + Math.random() * 5500;
-    // Спеціальна відповідь
     const special = SPECIAL_DIALOGS[`${toId}_${fromId}`];
     let text;
     if (special && Math.random() > 0.45) {
@@ -294,7 +419,7 @@ class BotEngine {
       const replies = this.getQuickReplies(toId, fromId);
       text = replies[Math.floor(Math.random() * replies.length)];
     }
-    return { type: "reply", text, delay };
+    return { type: "reply", text: this.genderize(text, gender), delay };
   }
 
   onPlayerMessage(fromId, toId) {
@@ -439,7 +564,7 @@ class BotEngine {
         if (Math.random() > 0.72) {
           const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
           this.state[c.id].mood = newMood;
-          this.state[c.id].thought = this.pickThought(newMood);
+          this.state[c.id].thought = this.pickThought(newMood, c.gender);
         }
         if (Math.random() > 0.8) this.state[c.id].status = this.pickStatus(c);
         if (Math.random() > 0.85) this.state[c.id].online = this.shouldBeOnline(c);

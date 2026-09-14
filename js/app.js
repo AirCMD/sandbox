@@ -3,16 +3,14 @@
    ============================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("viterecz_player");
-  if (saved && CHARACTERS.some(c => c.id === saved)) {
-    UI.playerId = saved;
-    engine.state[saved].online = true;
-    UI.applyTheme();
-    UI.refreshAll();
-  } else {
-    localStorage.removeItem("viterecz_player");
-    UI.showCharacterSelect();
-  }
+  // Єдиний персонаж гравця — Яні Куронеко
+  UI.playerId = "yani";
+  localStorage.setItem("viterecz_player", "yani");
+  engine.state.yani.online = true;
+  const selectModal = document.getElementById("character-select");
+  if (selectModal) selectModal.hidden = true;
+  UI.applyTheme();
+  UI.refreshAll();
 
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => UI.switchView(btn.dataset.view));

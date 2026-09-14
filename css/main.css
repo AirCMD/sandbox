@@ -1,214 +1,34 @@
-
-/* =========================================================
-   ОСНОВНИЙ LAYOUT
-   ========================================================= */
+/* ============================================
+   Основний layout Вітерця
+   Аватар + меню СПРАВА
+   ============================================ */
 
 .app {
-  display: grid;
-
-  grid-template-columns: minmax(0, 1fr) 230px;
-
-  width: 100%;
-  max-width: 1400px;
+  display: flex;
   height: 100vh;
-
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 14px;
-
-  gap: 14px;
-
-  box-sizing: border-box;
+  padding: 16px;
+  gap: 16px;
 }
 
-
-/* =========================================================
-   ЛІВА ЧАСТИНА
-   ========================================================= */
-
+/* Контент зліва */
 .content {
+  flex: 1;
   min-width: 0;
   min-height: 0;
-
   display: flex;
   flex-direction: column;
-
   overflow: hidden;
-
   padding-right: 4px;
 }
 
-
-/* =========================================================
-   ВЕРХНІЙ БЛОК КОРИСТУВАЧА
-   ========================================================= */
-
-.user-header {
-  flex-shrink: 0;
-
-  padding: 14px 18px 12px;
-  margin: 0;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.65);
-}
-
-.user-header h1 {
-  margin: 0;
-
-  font-size: 1.5rem;
-  font-weight: 600;
-
-  line-height: 1.25;
-}
-
-.user-header .online {
-  margin-top: 2px;
-
-  color: #35a85b;
-
-  font-size: 0.82rem;
-}
-
-.user-header .status {
-  margin-top: 6px;
-
-  font-size: 0.9rem;
-}
-
-.user-header .thoughts {
-  margin-top: 3px;
-
-  color: var(--text-muted);
-
-  font-size: 0.86rem;
-}
-
-
-/* =========================================================
-   ГОРИЗОНТАЛЬНА НАВІГАЦІЯ ЗЛІВА
-   ========================================================= */
-
-/*
-   Якщо основні кнопки використовують .main-nav,
-   у лівій частині вони стають горизонтальними.
-*/
-
-.content .main-nav {
-  width: 100%;
-
-  display: flex;
-  flex-direction: row;
-
-  align-items: stretch;
-
-  gap: 0;
-
-  padding: 0;
-  margin: 0;
-
-  flex-shrink: 0;
-
-  overflow-x: auto;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.65);
-}
-
-.content .main-nav .nav-btn {
-  flex: 1 1 0;
-
-  min-width: 0;
-  min-height: 42px;
-
-  padding: 9px 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 7px;
-
-  box-sizing: border-box;
-
-  border: 0;
-  border-right:
-    1px solid rgba(255,255,255,0.5);
-
-  border-radius: 0;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.62),
-      rgba(220,244,252,0.28)
-    );
-
-  color: var(--text-dark);
-
-  font-size: 0.86rem;
-
-  text-align: center;
-
-  cursor: pointer;
-
-  white-space: nowrap;
-
-  transition:
-    background 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.content .main-nav .nav-btn:last-child {
-  border-right: 0;
-}
-
-.content .main-nav .nav-btn:hover {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.86),
-      rgba(220,245,253,0.55)
-    );
-}
-
-.content .main-nav .nav-btn.active {
-  background:
-    linear-gradient(
-      180deg,
-      #effbff,
-      #c7e9f8
-    );
-
-  box-shadow:
-    inset 0 -3px 0 rgba(65,155,205,0.6);
-
-  font-weight: 600;
-}
-
-.content .main-nav .nav-btn .icon {
-  flex-shrink: 0;
-
-  width: auto;
-
-  font-size: 1rem;
-}
-
-
-/* =========================================================
-   VIEW
-   ========================================================= */
-
 .view {
   display: none;
-
+  animation: fadeIn 0.25s ease;
   flex: 1;
-
-  min-width: 0;
   min-height: 0;
-
   overflow-y: auto;
-
-  animation: fadeIn 0.2s ease;
 }
 
 .view.active {
@@ -216,484 +36,164 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-
-/* =========================================================
-   VIEW HEADER
-   ========================================================= */
-
 .view-header {
-  padding: 12px 18px;
-
-  margin: 0;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.55);
+  padding: 16px 20px;
+  margin-bottom: 16px;
 }
 
 .view-header h1 {
-  margin: 0;
-
   font-size: 1.5rem;
   font-weight: 600;
-
   letter-spacing: -0.02em;
 }
 
 .subtitle {
-  margin-top: 3px;
-
-  color: var(--text-muted);
-
   font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
-
-/* =========================================================
-   ПРАВА КОЛОНКА
-   ========================================================= */
-
+/* Права панель */
 .sidebar {
-  width: 230px;
-  min-width: 230px;
-
-  height: calc(100vh - 28px);
-
-  box-sizing: border-box;
-
+  width: 280px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-
-  align-items: stretch;
-
-  gap: 0;
-
-  padding: 0;
-
+  padding: 16px;
+  gap: 16px;
+  height: calc(100vh - 32px);
   overflow-y: auto;
-
-  /*
-     Важливо:
-     ніякого justify-content:center,
-     щоб аватар завжди починався зверху.
-  */
 }
-
-
-/* =========================================================
-   ВЕРХ ПРАВОЇ КОЛОНКИ — АВАТАР
-   ========================================================= */
 
 .me-panel {
-  width: 100%;
-
-  margin: 0;
-  padding: 0;
-
   display: flex;
   flex-direction: column;
-
   align-items: center;
-
-  gap: 0;
-
-  flex-shrink: 0;
-
+  gap: 10px;
   text-align: center;
 }
 
-
-/* Великий вертикальний аватар */
-
-.me-panel .avatar {
-  position: relative;
-
-  width: 210px;
-  height: 330px;
-
-  margin: 0 auto;
-
-  flex: 0 0 330px;
-
-  display: block;
-
-  overflow: hidden;
-
-  box-sizing: border-box;
-
-  border-radius: 55px 0 55px 0;
-
-  border:
-    3px solid rgba(255,255,255,0.82);
-
-  background:
-    linear-gradient(
-      145deg,
-      #e5f9ff 0%,
-      #b9e5f5 45%,
-      #80c7e5 100%
-    );
-
-  box-shadow:
-    0 5px 14px rgba(55,120,155,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.9);
+.me-panel .name {
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
-
-/* Легкий блиск */
-
-.me-panel .avatar::before {
-  content: "";
-
-  position: absolute;
-
-  inset: 0;
-
-  z-index: 2;
-
-  pointer-events: none;
-
-  border-radius: inherit;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,0.35),
-      rgba(255,255,255,0.08) 32%,
-      transparent 55%
-    );
-}
-
-
-/* Внутрішня тінь */
-
-.me-panel .avatar::after {
-  content: "";
-
-  position: absolute;
-
-  inset: 0;
-
-  z-index: 3;
-
-  pointer-events: none;
-
-  border-radius: inherit;
-
-  box-shadow:
-    inset 0 0 20px 5px rgba(0,0,0,0.35);
-}
-
-
-/* Зображення */
-
-.me-panel .avatar img {
-  position: relative;
-
-  z-index: 1;
-
-  width: 100%;
-  height: 100%;
-
-  display: block;
-
-  object-fit: cover;
-}
-
-
-/*
-   У макеті справа під аватаром одразу меню.
-   Якщо ці елементи існують у sidebar як дублікати,
-   вони не повинні створювати проміжок.
-*/
-
-.me-panel .name,
 .me-panel .mood {
-  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
-
-/* =========================================================
-   ПРАВЕ МЕНЮ
-   ========================================================= */
-
-.sidebar .main-nav {
-  width: 100%;
-
+/* Навігація */
+.main-nav {
   display: flex;
   flex-direction: column;
-
-  gap: 0;
-
-  padding: 0;
-  margin: 0;
-
-  flex-shrink: 0;
+  gap: 6px;
 }
 
-
-/* Кнопка */
-
-.sidebar .nav-btn {
-  width: 100%;
-
-  min-height: 42px;
-
+.nav-btn {
   display: flex;
   align-items: center;
-
-  gap: 9px;
-
-  padding: 9px 12px;
-
-  box-sizing: border-box;
-
-  border-radius: 0;
-
-  border:
-    1px solid rgba(255,255,255,0.62);
-
-  border-left: 0;
-  border-right: 0;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.62),
-      rgba(220,244,252,0.28)
-    );
-
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-dark);
-
-  font-size: 0.88rem;
-
+  font-size: 0.95rem;
   text-align: left;
-
-  cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    box-shadow 0.15s ease;
 }
 
-
-/* Перша */
-
-.sidebar .nav-btn:first-child {
-  border-radius: 12px 12px 0 0;
+.nav-btn:hover {
+  background: rgba(255,255,255,0.4);
 }
 
-
-/* Остання */
-
-.sidebar .nav-btn:last-child {
-  border-radius: 0;
-}
-
-
-/* Hover */
-
-.sidebar .nav-btn:hover {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.88),
-      rgba(220,244,253,0.55)
-    );
-}
-
-
-/* Активна */
-
-.sidebar .nav-btn.active {
-  background:
-    linear-gradient(
-      180deg,
-      #effbff,
-      #c3e6f7
-    );
-
-  box-shadow:
-    inset 4px 0 0 rgba(70,160,210,0.65);
-
+.nav-btn.active {
+  background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.45));
+  box-shadow: var(--shadow-soft);
   font-weight: 600;
 }
 
-
-/* Іконки */
-
-.sidebar .nav-btn .icon {
-  width: 22px;
-
-  flex-shrink: 0;
-
-  font-size: 1.05rem;
-
+.nav-btn .icon {
+  font-size: 1.2rem;
+  width: 24px;
   text-align: center;
 }
 
-
-/* =========================================================
-   ДРУЗІ ПІД «ДРУЗІ (ВСІ)»
-   ========================================================= */
-
-.friends-mini {
-  width: 100%;
-
-  box-sizing: border-box;
-
-  padding: 0;
-  margin: 0;
-
-  flex-shrink: 0;
-
-  overflow: hidden;
-
-  border-top:
-    1px solid rgba(255,255,255,0.6);
-}
-
-
-/* Не створюємо окремий заголовок */
-
+/* Друзі онлайн */
 .friends-mini h3 {
-  display: none;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
-
-
-/* Список */
 
 #online-friends {
+  list-style: none;
   display: flex;
   flex-direction: column;
-
-  gap: 0;
-
-  padding: 0;
-  margin: 0;
-
-  list-style: none;
+  gap: 6px;
 }
-
-
-/* Друзі */
 
 #online-friends li {
   display: flex;
   align-items: center;
-
-  width: 100%;
-  min-height: 36px;
-
-  gap: 7px;
-
-  padding: 7px 10px;
-
-  box-sizing: border-box;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.42);
-
-  border-radius: 0;
-
-  background:
-    rgba(255,255,255,0.18);
-
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 8px;
   cursor: pointer;
-
-  font-size: 0.82rem;
+  font-size: 0.9rem;
 }
 
 #online-friends li:hover {
-  background:
-    rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.35);
 }
 
-
-/*
-   У згорнутому стані:
-   рівно 4 друзі.
-*/
-
-#online-friends li:nth-child(n + 5) {
-  display: none;
+/* Статус */
+.status-selector label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
 }
 
-
-/*
-   У розгорнутому:
-   показуємо решту.
-*/
-
-.friends-mini.expanded #online-friends li:nth-child(n + 5) {
-  display: flex;
+.current-status {
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.4);
+  border-radius: var(--radius-sm);
+  text-align: center;
 }
 
-
-/* =========================================================
-   СТРІЧКА ДОПИСІВ
-   ========================================================= */
-
+/* === Стрічка === */
 .feed {
   display: flex;
   flex-direction: column;
-
-  gap: 0;
+  gap: 14px;
 }
-
-
-/*
-   Дописи не плавають окремими картками.
-   Вони йдуть один під одним, як у макеті.
-*/
 
 .post-card {
-  padding: 14px 18px;
-
-  margin: 0;
-
+  padding: 16px;
   display: flex;
   flex-direction: column;
-
-  gap: 9px;
-
-  border-radius: 0;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.65);
+  gap: 10px;
 }
-
-
-/* Заголовок допису */
 
 .post-header {
   display: flex;
   align-items: center;
-
   gap: 10px;
-
-  min-height: 28px;
 }
 
 .post-header .meta {
   flex: 1;
-
-  min-width: 0;
 }
 
 .post-header .author {
   font-weight: 600;
-
   cursor: pointer;
 }
 
@@ -702,65 +202,36 @@
 }
 
 .post-header .time {
-  color: var(--text-muted);
-
-  font-family: monospace;
-
   font-size: 0.8rem;
-
-  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-family: monospace;
+  letter-spacing: 0.05em;
 }
-
-
-/* Текст */
 
 .post-body {
   font-size: 0.95rem;
-
-  line-height: 1.5;
-
-  min-height: 42px;
+  line-height: 1.45;
 }
-
-
-/* Лайки + коментарі справа */
 
 .post-actions {
   display: flex;
+  gap: 12px;
   align-items: center;
-
-  justify-content: flex-end;
-
-  gap: 10px;
-
-  min-height: 28px;
-
-  font-size: 0.84rem;
+  font-size: 0.85rem;
 }
 
 .post-actions button {
+  background: none;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
-
   gap: 4px;
-
-  padding: 5px 8px;
-
-  background: transparent;
-
-  color: var(--text-muted);
-
+  padding: 4px 8px;
   border-radius: 8px;
-
-  border: 0;
-
-  cursor: pointer;
 }
 
 .post-actions button:hover {
-  background:
-    rgba(255,255,255,0.42);
-
+  background: rgba(255,255,255,0.4);
   color: var(--accent);
 }
 
@@ -768,61 +239,39 @@
   color: #e74c3c;
 }
 
-
-/* =========================================================
-   КОМЕНТАРІ
-   ========================================================= */
-
 .comments {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.4);
   display: flex;
   flex-direction: column;
-
   gap: 8px;
-
-  margin-top: 5px;
-  padding-top: 8px;
-
-  border-top:
-    1px solid rgba(255,255,255,0.4);
 }
 
 .comment {
   display: flex;
-
   gap: 8px;
-
   font-size: 0.88rem;
 }
 
 .comment .text {
   flex: 1;
-
-  padding: 6px 10px;
-
   background: rgba(255,255,255,0.35);
-
+  padding: 6px 10px;
   border-radius: 12px;
 }
 
 .comment .author {
   font-weight: 600;
-
   cursor: pointer;
 }
 
-
-/* =========================================================
-   ПРОФІЛЬ
-   ========================================================= */
-
+/* === Профіль === */
 .profile-header {
-  display: flex;
-  align-items: center;
-
-  gap: 20px;
-
   padding: 24px;
-
+  display: flex;
+  gap: 20px;
+  align-items: center;
   margin-bottom: 16px;
 }
 
@@ -832,19 +281,14 @@
 
 .profile-info .bio {
   margin-top: 6px;
-
-  color: var(--text-muted);
-
   font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 .profile-stats {
   display: flex;
-
   gap: 16px;
-
   margin-top: 10px;
-
   font-size: 0.85rem;
 }
 
@@ -856,131 +300,75 @@
   color: var(--text-dark);
 }
 
-
-/* =========================================================
-   ВКЛАДКИ
-   ========================================================= */
-
 .profile-tabs {
   display: flex;
-
   gap: 6px;
-
   margin-bottom: 14px;
 }
 
 .tab {
   padding: 8px 16px;
-
   border-radius: 999px;
-
   background: rgba(255,255,255,0.35);
-
   font-size: 0.9rem;
 }
 
 .tab.active {
-  background:
-    linear-gradient(
-      180deg,
-      #e8f4fc,
-      #b8d9f0
-    );
-
+  background: linear-gradient(180deg, #e8f4fc, #b8d9f0);
   font-weight: 600;
-
   box-shadow: var(--shadow-soft);
 }
 
-
-/* =========================================================
-   ГАЛЕРЕЯ
-   ========================================================= */
-
+/* === Галерея === */
 .gallery-grid {
   display: grid;
-
-  grid-template-columns:
-    repeat(auto-fill, minmax(140px, 1fr));
-
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
 }
 
 .gallery-item {
-  position: relative;
-
   aspect-ratio: 1;
-
+  border-radius: var(--radius-sm);
+  background: linear-gradient(145deg, #c5e0f0, #8ab8d0);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.7);
+  box-shadow: var(--shadow-soft);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  overflow: hidden;
-
-  border-radius: var(--radius-sm);
-
-  background:
-    linear-gradient(
-      145deg,
-      #c5e0f0,
-      #8ab8d0
-    );
-
-  border:
-    2px solid rgba(255,255,255,0.7);
-
-  box-shadow: var(--shadow-soft);
-
-  cursor: pointer;
-
   font-size: 2.5rem;
 }
 
 .gallery-item:hover {
   transform: scale(1.03);
-
   transition: transform 0.15s ease;
 }
 
 .gallery-item .likes {
   position: absolute;
-
-  right: 6px;
   bottom: 6px;
-
-  padding: 2px 6px;
-
+  right: 6px;
   background: rgba(0,0,0,0.35);
-
   color: white;
-
-  border-radius: 8px;
-
   font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 8px;
 }
 
-
-/* =========================================================
-   ЧАТ
-   ========================================================= */
-
+/* === Чат === */
 #view-chat {
   display: none;
-
   flex-direction: column;
-
   min-height: 0;
 }
 
 #view-chat.active {
   display: flex !important;
-
   flex: 1;
-
   min-height: 0;
-
   height: 100%;
-
   overflow: hidden;
 }
 
@@ -990,96 +378,63 @@
 
 .chat-messages {
   flex: 1 1 auto;
-
   min-height: 120px;
-
   overflow-y: auto;
-
+  -webkit-overflow-scrolling: touch;
   padding: 12px 8px;
-
   display: flex;
   flex-direction: column;
-
   gap: 10px;
-
-  -webkit-overflow-scrolling: touch;
 }
 
 .msg {
   max-width: 75%;
-
   padding: 10px 14px;
-
   border-radius: 16px;
-
   font-size: 0.92rem;
-
   line-height: 1.4;
 }
 
 .msg.mine {
   align-self: flex-end;
-
-  background:
-    linear-gradient(
-      180deg,
-      #d4eefc,
-      #a8d4f0
-    );
-
+  background: linear-gradient(180deg, #d4eefc, #a8d4f0);
   border-bottom-right-radius: 4px;
 }
 
 .msg.theirs {
   align-self: flex-start;
-
   background: rgba(255,255,255,0.55);
-
   border-bottom-left-radius: 4px;
 }
 
 .msg .status {
-  margin-top: 4px;
-
-  color: var(--text-muted);
-
   font-size: 0.7rem;
-
+  color: var(--text-muted);
+  margin-top: 4px;
   text-align: right;
 }
 
 .chat-input-area {
-  flex-shrink: 0;
-
   padding: 12px;
-
   margin-top: 8px;
-
+  flex-shrink: 0;
   max-height: 42%;
-
   overflow-y: auto;
 }
 
 .quick-replies {
   display: flex;
   flex-wrap: wrap;
-
   gap: 6px;
-
   margin-bottom: 10px;
 }
 
 .quick-replies button {
   padding: 6px 12px;
-
   border-radius: 999px;
-
   background: rgba(255,255,255,0.5);
-
-  border:
-    1px solid rgba(255,255,255,0.6);
-
   font-size: 0.85rem;
+  border: 1px solid rgba(255,255,255,0.6);
 }
 
 .quick-replies button:hover {
@@ -1088,235 +443,32 @@
 
 .chat-actions {
   display: flex;
-
   justify-content: flex-end;
 }
 
 #chat-header {
   display: flex;
   align-items: center;
-
   gap: 12px;
-
   padding: 12px 16px;
 }
 
 .back-btn {
-  padding: 4px 8px;
-
   background: none;
-
-  color: var(--text-dark);
-
   font-size: 1.3rem;
-}
-
-
-/* =========================================================
-   ПОШУК
-   ========================================================= */
-
-.search-bar {
-  display: flex;
-
-  gap: 8px;
-
-  padding: 8px 12px;
-
-  margin-bottom: 12px;
-}
-
-.search-bar input {
-  flex: 1;
-
-  padding: 8px 14px;
-
-  border-radius: 999px;
-
-  border:
-    1px solid var(--border-glass);
-
-  background: rgba(255,255,255,0.5);
-
-  font-family: inherit;
-
-  font-size: 0.9rem;
-
   color: var(--text-dark);
-
-  outline: none;
+  padding: 4px 8px;
 }
 
-.search-bar input::placeholder {
-  color: var(--text-muted);
-}
-
-
-/* =========================================================
-   СПИСОК ЧАТІВ
-   ========================================================= */
-
-.msg-list {
-  display: flex;
-  flex-direction: column;
-
-  gap: 6px;
-}
-
-.msg-item {
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 10px 12px;
-
-  border-radius: var(--radius-sm);
-
-  background: rgba(255,255,255,0.3);
-
-  cursor: pointer;
-}
-
-.msg-item:hover {
-  background: rgba(255,255,255,0.5);
-}
-
-.msg-item .preview {
-  flex: 1;
-
-  min-width: 0;
-
-  color: var(--text-muted);
-
-  font-size: 0.85rem;
-
-  white-space: nowrap;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-}
-
-
-/* =========================================================
-   ЗУСТРІЧІ
-   ========================================================= */
-
-.meeting-card {
-  padding: 12px;
-
-  margin-bottom: 8px;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 6px;
-}
-
-.meeting-card .status-accepted {
-  color: #27ae60;
-}
-
-.meeting-card .status-declined {
-  color: #c0392b;
-}
-
-.meeting-card .status-pending {
-  color: #f39c12;
-}
-
-
-/* =========================================================
-   ІГРИ
-   ========================================================= */
-
-.game-card {
-  padding: 16px;
-
-  margin-bottom: 10px;
-
-  cursor: pointer;
-}
-
-.game-card:hover {
-  background: rgba(255,255,255,0.45);
-}
-
-.game-log {
-  max-height: 150px;
-
-  overflow-y: auto;
-
-  margin-top: 8px;
-
-  padding: 8px;
-
-  background: rgba(0,0,0,0.05);
-
-  border-radius: 8px;
-
-  font-size: 0.85rem;
-}
-
-
-/* =========================================================
-   ЗГАДКИ
-   ========================================================= */
-
-.mention {
-  color: var(--accent);
-
-  font-weight: 600;
-
-  cursor: pointer;
-}
-
-.mention:hover {
-  text-decoration: underline;
-}
-
-
-/* =========================================================
-   СИСТЕМНІ ПОВІДОМЛЕННЯ
-   ========================================================= */
-
-.msg.system {
-  align-self: center;
-
-  max-width: 90%;
-
-  padding: 6px 12px;
-
-  background: rgba(255,255,255,0.35);
-
-  border-radius: 12px;
-
-  color: var(--text-muted);
-
-  font-size: 0.8rem;
-
-  text-align: center;
-}
-
-
-/* =========================================================
-   МОДАЛКИ
-   ========================================================= */
-
+/* === Модалки === */
 .modal {
   position: fixed;
-
   inset: 0;
-
-  z-index: 100;
-
+  background: rgba(30, 70, 100, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  background: rgba(30,70,100,0.45);
-
+  z-index: 100;
   backdrop-filter: blur(4px);
 }
 
@@ -1325,75 +477,53 @@
 }
 
 .modal-content {
-  position: relative;
-
-  width: 90%;
-
   max-width: 520px;
-
+  width: 90%;
   max-height: 80vh;
-
   overflow-y: auto;
-
   padding: 24px;
+  position: relative;
 }
 
 .modal-close {
   position: absolute;
-
   top: 12px;
   right: 16px;
-
   background: none;
-
-  color: var(--text-muted);
-
   font-size: 1.5rem;
+  color: var(--text-muted);
 }
 
 .character-select h2 {
-  margin-bottom: 8px;
-
   text-align: center;
+  margin-bottom: 8px;
 }
 
 .character-select .hint {
-  margin-bottom: 20px;
-
-  color: var(--text-muted);
-
-  font-size: 0.85rem;
-
   text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
 }
 
 .character-grid {
   display: grid;
-
   grid-template-columns: repeat(2, 1fr);
-
   gap: 12px;
 }
 
 .char-card {
   padding: 14px;
-
   border-radius: var(--radius-sm);
-
   background: rgba(255,255,255,0.4);
-
   border: 2px solid transparent;
-
   cursor: pointer;
-
   text-align: center;
-
   transition: all 0.15s ease;
 }
 
 .char-card:hover {
   background: rgba(255,255,255,0.65);
-
   border-color: var(--accent-soft);
 }
 
@@ -1402,241 +532,238 @@
 }
 
 .char-card .name {
-  font-size: 0.95rem;
-
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .char-card .gender {
-  color: var(--text-muted);
-
   font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
-
-/* =========================================================
-   TOAST
-   ========================================================= */
-
-#toast-root {
-  position: fixed;
-
-  left: 50%;
-  bottom: 24px;
-
-  z-index: 200;
-
-  width: min(360px, 92vw);
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 8px;
-
-  transform: translateX(-50%);
-
-  pointer-events: none;
-}
-
-.toast {
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-
-  padding: 14px 18px;
-
-  opacity: 0;
-
-  transform: translateY(16px);
-
-  transition:
-    opacity 0.35s ease,
-    transform 0.35s ease;
-
-  pointer-events: auto;
-}
-
-.toast.show {
-  opacity: 1;
-
-  transform: translateY(0);
-}
-
-
-/* =========================================================
-   МОБІЛЬНА ВЕРСІЯ
-   ========================================================= */
-
+/* Адаптив */
 @media (max-width: 800px) {
-
   .app {
-    display: flex;
-    flex-direction: column;
-
-    height: 100dvh;
-
-    padding: 6px;
-
-    gap: 6px;
-  }
-
-  .content {
-    order: 1;
-
-    flex: 1;
-
-    min-height: 0;
-
-    overflow: hidden;
-  }
-
-  .sidebar {
-    order: 2;
-
-    width: 100%;
-    min-width: 0;
-
-    height: auto;
-
-    max-height: 30vh;
-
+    flex-direction: column-reverse;
     padding: 8px;
-
-    overflow-y: auto;
+    gap: 8px;
   }
-
-  .content .main-nav {
-    overflow-x: auto;
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 10px;
   }
-
-  .content .main-nav .nav-btn {
-    flex: 0 0 auto;
-
-    min-width: 70px;
-  }
-
   .me-panel {
     flex-direction: row;
-
-    align-items: center;
-
-    justify-content: flex-start;
-
     text-align: left;
-
-    gap: 10px;
   }
-
-  .me-panel .avatar {
-    width: 55px;
-    height: 75px;
-
-    flex-basis: 75px;
-
-    border-radius: 18px 0 18px 0;
-  }
-
-  .sidebar .main-nav {
+  .main-nav {
     flex-direction: row;
-
     flex-wrap: wrap;
-
-    gap: 4px;
   }
-
-  .sidebar .nav-btn {
-    width: auto;
-
-    flex: 1 1 auto;
-
-    min-width: 70px;
-
-    min-height: 36px;
-
-    justify-content: center;
-
-    padding: 8px 6px;
-
-    border-radius: 999px;
-
-    font-size: 0.78rem;
-  }
-
-  .sidebar .nav-btn:first-child,
-  .sidebar .nav-btn:last-child {
-    border-radius: 999px;
-  }
-
-  .friends-mini,
-  .status-selector {
+  .friends-mini, .status-selector {
     display: none;
   }
+}
 
-  body.chat-open .sidebar {
-    max-height: 56px;
+/* === Пошук === */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+}
+.search-bar input {
+  flex: 1;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255,255,255,0.5);
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  outline: none;
+}
+.search-bar input::placeholder { color: var(--text-muted); }
 
+/* === Месенджер список === */
+.msg-list { display: flex; flex-direction: column; gap: 6px; }
+.msg-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: rgba(255,255,255,0.3);
+}
+.msg-item:hover { background: rgba(255,255,255,0.5); }
+.msg-item .preview {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === Зустрічі === */
+.meeting-card {
+  padding: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.meeting-card .status-accepted { color: #27ae60; }
+.meeting-card .status-declined { color: #c0392b; }
+.meeting-card .status-pending { color: #f39c12; }
+
+/* === Ігри === */
+.game-card {
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.game-card:hover { background: rgba(255,255,255,0.45); }
+.game-log {
+  font-size: 0.85rem;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 8px;
+}
+
+/* === Згадки === */
+.mention {
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.mention:hover { text-decoration: underline; }
+
+/* === Покращена мобільна адаптація === */
+@media (max-width: 800px) {
+  .app {
+    flex-direction: column-reverse;
+    padding: 6px;
+    gap: 6px;
+    height: 100dvh;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 42vh;
+    flex-direction: column;
+    padding: 10px;
+    overflow-y: auto;
+  }
+  .me-panel {
+    flex-direction: row;
+    text-align: left;
+    gap: 12px;
+  }
+  .me-panel .avatar.lg { width: 52px; height: 52px; font-size: 1.5rem; }
+  .main-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .nav-btn {
+    flex: 1 1 auto;
+    min-width: 70px;
+    justify-content: center;
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+  .nav-btn span:not(.icon) { display: none; }
+  .nav-btn .icon { font-size: 1.3rem; }
+  .friends-mini { display: block; }
+  .friends-mini h3 { font-size: 0.7rem; }
+  #online-friends { flex-direction: row; flex-wrap: wrap; }
+  #online-friends li { font-size: 0.8rem; }
+  .status-selector { display: block; }
+  .content {
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
   }
-
+  .sidebar {
+    max-height: 28vh;
+  }
+  /* У чаті — ще більше місця повідомленням */
+  body.chat-open .sidebar {
+    max-height: 56px;
+    overflow: hidden;
+  }
   body.chat-open .me-panel,
   body.chat-open .friends-mini,
   body.chat-open .status-selector {
     display: none !important;
   }
-
   body.chat-open .main-nav {
     flex-wrap: nowrap;
   }
-
   #view-chat.active {
     min-height: 0;
   }
-
   .chat-messages {
     min-height: 180px;
-
     flex: 1 1 0;
   }
-
   .chat-input-area {
     max-height: 38%;
   }
-
-  .character-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .post-card {
-    padding: 12px;
-  }
-
-  .msg {
-    max-width: 88%;
-
-    font-size: 0.9rem;
-  }
-
-  .gallery-grid {
-    grid-template-columns:
-      repeat(auto-fill, minmax(100px, 1fr));
-  }
+  .character-grid { grid-template-columns: 1fr 1fr; }
+  .post-card { padding: 12px; }
+  .msg { max-width: 88%; font-size: 0.9rem; }
+  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 }
 
-
-/* =========================================================
-   ДУЖЕ МАЛИЙ ЕКРАН
-   ========================================================= */
-
 @media (max-width: 420px) {
+  .character-grid { grid-template-columns: 1fr; }
+  .nav-btn { min-width: 56px; padding: 8px 4px; }
+}
 
-  .character-grid {
-    grid-template-columns: 1fr;
-  }
+/* === Toast досягнень === */
+#toast-root {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  width: min(360px, 92vw);
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: auto;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
 
-  .sidebar .nav-btn {
-    min-width: 56px;
-
-    padding: 8px 4px;
-  }
+.msg.system {
+  align-self: center;
+  max-width: 90%;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.35);
+  border-radius: 12px;
+  padding: 6px 12px;
+  text-align: center;
 }

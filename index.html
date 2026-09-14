@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Вітерець — соцмережа</title>
+  <link rel="stylesheet" href="css/frutiger-aero.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <div class="app">
+    <main class="content" id="main-content">
+      <!-- Стрічка -->
+      <section id="view-feed" class="view active">
+        <header class="view-header glass">
+          <h1>Стрічка</h1>
+          <p class="subtitle">Усі дописи · час тече дивно</p>
+        </header>
+        <div class="search-bar glass">
+          <input type="search" id="search-posts" placeholder="Пошук дописів..." autocomplete="off">
+        </div>
+        <div class="feed" id="feed-container"></div>
+      </section>
+
+      <!-- Мій профіль -->
+      <section id="view-profile" class="view">
+        <div class="profile-header glass" id="profile-header"></div>
+        <div class="profile-tabs">
+          <button class="tab active" data-tab="posts">Публікації</button>
+          <button class="tab" data-tab="thoughts">Думки</button>
+          <button class="tab" data-tab="friends">Друзі</button>
+          <button class="tab" data-tab="goals">Цілі</button>
+          <button class="tab" data-tab="meetings">Зустрічі</button>
+          <button class="tab" data-tab="achievements">Досягнення</button>
+        </div>
+        <div class="profile-content" id="profile-content"></div>
+      </section>
+
+      <!-- Профіль бота -->
+      <section id="view-bot-profile" class="view">
+        <div class="profile-header glass" id="bot-profile-header"></div>
+        <div class="profile-content" id="bot-profile-content"></div>
+      </section>
+
+      <!-- Галерея -->
+      <section id="view-gallery" class="view">
+        <header class="view-header glass">
+          <h1>Галерея</h1>
+          <p class="subtitle">Картинки · лайки · коментарі</p>
+        </header>
+        <div class="gallery-grid" id="gallery-grid"></div>
+      </section>
+
+      <!-- Ігри -->
+      <section id="view-games" class="view">
+        <header class="view-header glass">
+          <h1>Ігри</h1>
+          <p class="subtitle">Боти грають разом · ти можеш приєднатися</p>
+        </header>
+        <div class="games-list" id="games-list"></div>
+      </section>
+
+      <!-- Список чатів -->
+      <section id="view-messages" class="view">
+        <header class="view-header glass">
+          <h1>Повідомлення</h1>
+          <p class="subtitle">Особисті переписки</p>
+        </header>
+        <div class="search-bar glass">
+          <input type="search" id="search-people" placeholder="Знайти людину..." autocomplete="off">
+        </div>
+        <div class="msg-list" id="msg-list"></div>
+      </section>
+
+      <!-- Чат -->
+      <section id="view-chat" class="view">
+        <header class="view-header glass" id="chat-header">
+          <button class="back-btn" id="chat-back">←</button>
+          <div class="chat-user-info" id="chat-user-info"></div>
+        </header>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area glass">
+          <div class="quick-replies" id="quick-replies"></div>
+          <div class="chat-actions" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn" id="btn-meetup">Запросити зустрітися</button>
+            <button id="btn-block" class="btn-danger">Заблокувати</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Права панель -->
+    <aside class="sidebar glass">
+      <div class="me-panel" id="me-panel"></div>
+
+      <nav class="main-nav">
+        <button class="nav-btn active" data-view="feed"><span class="icon">📜</span><span>Стрічка</span></button>
+        <button class="nav-btn" data-view="profile"><span class="icon">👤</span><span>Профіль</span></button>
+        <button class="nav-btn" data-view="messages"><span class="icon">💬</span><span>Чати</span></button>
+        <button class="nav-btn" data-view="gallery"><span class="icon">🖼</span><span>Галерея</span></button>
+        <button class="nav-btn" data-view="games"><span class="icon">🎮</span><span>Ігри</span></button>
+      </nav>
+
+      <div class="friends-mini" id="friends-mini">
+        <h3>Онлайн</h3>
+        <ul id="online-friends"></ul>
+      </div>
+
+      <div class="status-selector glass" id="status-selector">
+        <label>Статус (лише перегляд)</label>
+        <div class="current-status" id="current-status"></div>
+        <div style="margin-top:6px;font-size:0.8rem;color:var(--text-muted)" id="theme-label"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Попап галереї -->
+  <div class="modal" id="gallery-modal" hidden>
+    <div class="modal-content glass">
+      <button class="modal-close" id="modal-close">×</button>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Вибір персонажа -->
+  <div class="modal" id="character-select" hidden>
+    <div class="modal-content glass character-select">
+      <h2>Обери, ким будеш</h2>
+      <p class="hint">Рекомендовано: <strong>Яні Куронеко</strong> — від неї задумана історія.<br>
+      Ти керуєш лайками і готовими повідомленнями. Настрій, думки, плітки і стосунки — вирішують персонажі.</p>
+      <div class="character-grid" id="character-grid"></div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/bots.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <div id="toast-root"></div>
+</body>
+</html>

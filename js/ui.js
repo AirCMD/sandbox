@@ -37,6 +37,7 @@ const UI = {
     const mood = engine.getState(this.playerId).mood;
     const theme = MOOD_THEMES[mood] || MOOD_THEMES["спокійний"];
     document.body.className = theme.class;
+    if (typeof ThemeSFX !== "undefined") ThemeSFX.playTheme(theme.class);
     const label = document.getElementById("theme-label");
     if (label) label.textContent = theme.emoji + " тема: " + theme.name;
   },
@@ -45,15 +46,20 @@ const UI = {
     if (!this.playerId) return;
     const c = engine.getCharacter(this.playerId);
     const s = engine.getState(this.playerId);
+    const online = s.online ? '<div class="status-online">онлайн</div>' : '<div class="status-online" style="color:#ffb0b0">офлайн</div>';
     document.getElementById("me-panel").innerHTML = `
-      <div class="avatar lg online" style="background:linear-gradient(145deg,${c.color}88,${c.color})">${c.emoji}</div>
-      <div>
-        <div class="name">${c.name}</div>
-        <div class="mood">${engine.moodLabel(s.mood, c.gender)} · ${s.status}</div>
-        <div class="status-pill" style="margin-top:4px">💭 ${s.thought}</div>
+      <div class="avatar-frame panel">
+        <div class="avatar lg ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}cc,${c.color})">${c.emoji}</div>
       </div>
+      <div class="name">${c.name}</div>
+      ${online}
+      <div class="mood">${engine.moodLabel(s.mood, c.gender)}</div>
     `;
-    document.getElementById("current-status").textContent = s.status;
+    const st = document.getElementById("current-status");
+    if (st) {
+      const left = engine.activityRemainingLabel(this.playerId);
+      st.textContent = s.status + (left ? " (" + left + ")" : "") + (s.thought ? " · " + s.thought : "");
+    }
     this.applyTheme();
   },
 
@@ -143,15 +149,13 @@ const UI = {
     const c = engine.getCharacter(this.playerId);
     const s = engine.getState(this.playerId);
     document.getElementById("profile-header").innerHTML = `
-      <div class="avatar lg online" style="background:linear-gradient(145deg,${c.color}88,${c.color})">${c.emoji}</div>
-      <div class="profile-info">
-        <h2>${c.name}</h2>
-        <div class="bio">${c.bio}</div>
-        <div class="profile-stats">
-          <span><strong>${engine.posts.filter(p => p.author === this.playerId).length}</strong> дописів</span>
-          <span><strong>${s.friends.length}</strong> друзів</span>
-          <span>${engine.moodLabel(s.mood, c.gender)}</span>
-        </div>
+      <div class="profile-info" style="width:100%">
+        <h1 class="display-name">${c.name}</h1>
+        <div class="status-online">${s.online ? "онлайн" : "офлайн"}</div>
+        <p class="info-line"><b>Статус:</b> ${engine.moodLabel(s.mood, c.gender)}, ${s.status}${engine.activityRemainingLabel(this.playerId) ? " (" + engine.activityRemainingLabel(this.playerId) + ")" : ""}.</p>
+        <p class="info-line"><b>Думки:</b> ${s.thought}</p>
+        <p class="info-line"><b>Дописів:</b> ${engine.posts.filter(p => p.author === this.playerId).length}
+           · <b>Друзів:</b> ${s.friends.length}</p>
       </div>
     `;
     this.renderProfileTab("posts");
@@ -242,7 +246,7 @@ const UI = {
       <div class="profile-info">
         <h2>${c.name}</h2>
         <div class="bio">${c.bio}</div>
-        <div class="status-pill" style="margin-top:8px">${s.status} · ${engine.moodLabel(s.mood, c.gender)}</div>
+        <div class="status-pill" style="margin-top:8px">${s.status}${engine.activityRemainingLabel(id) ? " · " + engine.activityRemainingLabel(id) : ""} · ${engine.moodLabel(s.mood, c.gender)}</div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn" id="btn-message">Написати</button>
           <button class="btn" id="btn-toggle-friend">${["friend","close","crush"].includes(rel) ? "Видалити з друзів" : "Додати в друзі"}</button>
@@ -374,7 +378,7 @@ const UI = {
     const s = engine.getState(toId);
     document.getElementById("chat-user-info").innerHTML = `
       <div class="avatar sm ${s.online ? "online" : ""}">${c.emoji}</div>
-      <div><strong>${c.name}</strong><br><span style="font-size:0.8rem;color:var(--text-muted)">${s.online ? s.status : "не в мережі"}</span></div>
+      <div><strong>${c.name}</strong><br><span style="font-size:0.8rem;color:var(--text-muted)">${s.online ? (s.status + (engine.activityRemainingLabel(toId) ? " · " + engine.activityRemainingLabel(toId) : "")) : "не в мережі"}</span></div>
     `;
     this.renderChatMessages();
     this.renderQuickReplies();
@@ -432,7 +436,7 @@ const UI = {
     engine.onPlayerMessage(this.playerId, this.currentChatId);
     this.renderChatMessages();
 
-    const decision = engine.botMayReply(this.playerId, this.currentChatId);
+    const decision = engine.botMayReply(this.playerId, this.currentChatId, text);
     const box = document.getElementById("chat-messages");
     const name = engine.getCharacter(this.currentChatId)?.name?.split(" ")[0] || "";
 

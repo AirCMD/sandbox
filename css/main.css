@@ -39,12 +39,17 @@
 
 
 /* =========================================================
-   ПРОФІЛЬ ЗВЕРХУ
+   ВЕРХНІЙ БЛОК КОРИСТУВАЧА
    ========================================================= */
 
 .user-header {
-  padding: 15px 20px;
-  margin-bottom: 10px;
+  flex-shrink: 0;
+
+  padding: 14px 18px 12px;
+  margin: 0;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.65);
 }
 
 .user-header h1 {
@@ -52,10 +57,12 @@
 
   font-size: 1.5rem;
   font-weight: 600;
+
+  line-height: 1.25;
 }
 
 .user-header .online {
-  margin-top: 3px;
+  margin-top: 2px;
 
   color: #35a85b;
 
@@ -63,13 +70,13 @@
 }
 
 .user-header .status {
-  margin-top: 7px;
+  margin-top: 6px;
 
   font-size: 0.9rem;
 }
 
 .user-header .thoughts {
-  margin-top: 4px;
+  margin-top: 3px;
 
   color: var(--text-muted);
 
@@ -78,28 +85,112 @@
 
 
 /* =========================================================
-   VIEW HEADER
+   ГОРИЗОНТАЛЬНА НАВІГАЦІЯ ЗЛІВА
    ========================================================= */
 
-.view-header {
-  padding: 16px 20px;
-  margin-bottom: 12px;
-}
+/*
+   Якщо основні кнопки використовують .main-nav,
+   у лівій частині вони стають горизонтальними.
+*/
 
-.view-header h1 {
+.content .main-nav {
+  width: 100%;
+
+  display: flex;
+  flex-direction: row;
+
+  align-items: stretch;
+
+  gap: 0;
+
+  padding: 0;
   margin: 0;
 
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  flex-shrink: 0;
+
+  overflow-x: auto;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.65);
 }
 
-.subtitle {
-  margin-top: 3px;
+.content .main-nav .nav-btn {
+  flex: 1 1 0;
 
-  color: var(--text-muted);
+  min-width: 0;
+  min-height: 42px;
 
-  font-size: 0.85rem;
+  padding: 9px 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  box-sizing: border-box;
+
+  border: 0;
+  border-right:
+    1px solid rgba(255,255,255,0.5);
+
+  border-radius: 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.62),
+      rgba(220,244,252,0.28)
+    );
+
+  color: var(--text-dark);
+
+  font-size: 0.86rem;
+
+  text-align: center;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.content .main-nav .nav-btn:last-child {
+  border-right: 0;
+}
+
+.content .main-nav .nav-btn:hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.86),
+      rgba(220,245,253,0.55)
+    );
+}
+
+.content .main-nav .nav-btn.active {
+  background:
+    linear-gradient(
+      180deg,
+      #effbff,
+      #c7e9f8
+    );
+
+  box-shadow:
+    inset 0 -3px 0 rgba(65,155,205,0.6);
+
+  font-weight: 600;
+}
+
+.content .main-nav .nav-btn .icon {
+  flex-shrink: 0;
+
+  width: auto;
+
+  font-size: 1rem;
 }
 
 
@@ -138,6 +229,37 @@
 
 
 /* =========================================================
+   VIEW HEADER
+   ========================================================= */
+
+.view-header {
+  padding: 12px 18px;
+
+  margin: 0;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.55);
+}
+
+.view-header h1 {
+  margin: 0;
+
+  font-size: 1.5rem;
+  font-weight: 600;
+
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin-top: 3px;
+
+  color: var(--text-muted);
+
+  font-size: 0.85rem;
+}
+
+
+/* =========================================================
    ПРАВА КОЛОНКА
    ========================================================= */
 
@@ -152,22 +274,31 @@
   display: flex;
   flex-direction: column;
 
-  align-items: center;
+  align-items: stretch;
 
   gap: 0;
 
-  padding: 10px;
+  padding: 0;
 
   overflow-y: auto;
+
+  /*
+     Важливо:
+     ніякого justify-content:center,
+     щоб аватар завжди починався зверху.
+  */
 }
 
 
 /* =========================================================
-   АВАТАРКА
+   ВЕРХ ПРАВОЇ КОЛОНКИ — АВАТАР
    ========================================================= */
 
 .me-panel {
   width: 100%;
+
+  margin: 0;
+  padding: 0;
 
   display: flex;
   flex-direction: column;
@@ -176,13 +307,13 @@
 
   gap: 0;
 
-  text-align: center;
-
   flex-shrink: 0;
+
+  text-align: center;
 }
 
 
-/* Аватарка */
+/* Великий вертикальний аватар */
 
 .me-panel .avatar {
   position: relative;
@@ -190,7 +321,9 @@
   width: 210px;
   height: 330px;
 
-  flex: 0 0 auto;
+  margin: 0 auto;
+
+  flex: 0 0 330px;
 
   display: block;
 
@@ -198,21 +331,47 @@
 
   box-sizing: border-box;
 
-  margin: 0 auto;
-
   border-radius: 55px 0 55px 0;
 
-  border: 3px solid rgba(255, 255, 255, 0.78);
+  border:
+    3px solid rgba(255,255,255,0.82);
 
   background:
     linear-gradient(
       145deg,
-      #dff6ff,
-      #9bd5ee
+      #e5f9ff 0%,
+      #b9e5f5 45%,
+      #80c7e5 100%
     );
 
   box-shadow:
-    0 5px 14px rgba(55, 120, 155, 0.22);
+    0 5px 14px rgba(55,120,155,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+
+/* Легкий блиск */
+
+.me-panel .avatar::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 2;
+
+  pointer-events: none;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.35),
+      rgba(255,255,255,0.08) 32%,
+      transparent 55%
+    );
 }
 
 
@@ -225,21 +384,23 @@
 
   inset: 0;
 
-  border-radius: inherit;
-
-  box-shadow:
-    inset 0 0 20px 5px rgba(0, 0, 0, 0.42);
+  z-index: 3;
 
   pointer-events: none;
 
-  z-index: 3;
+  border-radius: inherit;
+
+  box-shadow:
+    inset 0 0 20px 5px rgba(0,0,0,0.35);
 }
 
 
-/* Якщо аватарка є img */
+/* Зображення */
 
 .me-panel .avatar img {
   position: relative;
+
+  z-index: 1;
 
   width: 100%;
   height: 100%;
@@ -247,21 +408,23 @@
   display: block;
 
   object-fit: cover;
-
-  z-index: 1;
 }
 
 
-/* Не показуємо дубль імені/настрою справа */
+/*
+   У макеті справа під аватаром одразу меню.
+   Якщо ці елементи існують у sidebar як дублікати,
+   вони не повинні створювати проміжок.
+*/
 
 .me-panel .name,
 .me-panel .mood {
-  display: none;
+  margin: 0;
 }
 
 
 /* =========================================================
-   ПРАВЕ ВЕРТИКАЛЬНЕ МЕНЮ
+   ПРАВЕ МЕНЮ
    ========================================================= */
 
 .sidebar .main-nav {
@@ -273,12 +436,13 @@
   gap: 0;
 
   padding: 0;
-
   margin: 0;
+
+  flex-shrink: 0;
 }
 
 
-/* Кнопки */
+/* Кнопка */
 
 .sidebar .nav-btn {
   width: 100%;
@@ -296,14 +460,18 @@
 
   border-radius: 0;
 
+  border:
+    1px solid rgba(255,255,255,0.62);
+
+  border-left: 0;
+  border-right: 0;
+
   background:
     linear-gradient(
       180deg,
-      rgba(255,255,255,0.58),
-      rgba(255,255,255,0.32)
+      rgba(255,255,255,0.62),
+      rgba(220,244,252,0.28)
     );
-
-  border: 1px solid rgba(255,255,255,0.62);
 
   color: var(--text-dark);
 
@@ -329,7 +497,7 @@
 /* Остання */
 
 .sidebar .nav-btn:last-child {
-  border-radius: 0 0 12px 12px;
+  border-radius: 0;
 }
 
 
@@ -339,8 +507,8 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255,255,255,0.82),
-      rgba(255,255,255,0.52)
+      rgba(255,255,255,0.88),
+      rgba(220,244,253,0.55)
     );
 }
 
@@ -351,12 +519,12 @@
   background:
     linear-gradient(
       180deg,
-      #edfaff,
+      #effbff,
       #c3e6f7
     );
 
   box-shadow:
-    inset 3px 0 0 rgba(70, 160, 210, 0.65);
+    inset 4px 0 0 rgba(70,160,210,0.65);
 
   font-weight: 600;
 }
@@ -369,14 +537,14 @@
 
   flex-shrink: 0;
 
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 
   text-align: center;
 }
 
 
 /* =========================================================
-   ДРУЗІ
+   ДРУЗІ ПІД «ДРУЗІ (ВСІ)»
    ========================================================= */
 
 .friends-mini {
@@ -385,14 +553,18 @@
   box-sizing: border-box;
 
   padding: 0;
-
   margin: 0;
 
+  flex-shrink: 0;
+
   overflow: hidden;
+
+  border-top:
+    1px solid rgba(255,255,255,0.6);
 }
 
 
-/* Заголовок не дублюємо */
+/* Не створюємо окремий заголовок */
 
 .friends-mini h3 {
   display: none;
@@ -408,54 +580,60 @@
   gap: 0;
 
   padding: 0;
-
   margin: 0;
 
   list-style: none;
 }
 
 
-/* Друг */
+/* Друзі */
 
 #online-friends li {
   display: flex;
   align-items: center;
 
-  gap: 7px;
-
+  width: 100%;
   min-height: 36px;
 
-  padding: 6px 10px;
+  gap: 7px;
+
+  padding: 7px 10px;
 
   box-sizing: border-box;
 
   border-bottom:
-    1px solid rgba(255,255,255,0.4);
+    1px solid rgba(255,255,255,0.42);
 
   border-radius: 0;
+
+  background:
+    rgba(255,255,255,0.18);
 
   cursor: pointer;
 
   font-size: 0.82rem;
-
-  background:
-    rgba(255,255,255,0.18);
 }
 
 #online-friends li:hover {
   background:
-    rgba(255,255,255,0.42);
+    rgba(255,255,255,0.45);
 }
 
 
-/* Спочатку видно тільки 4 */
+/*
+   У згорнутому стані:
+   рівно 4 друзі.
+*/
 
 #online-friends li:nth-child(n + 5) {
   display: none;
 }
 
 
-/* Після розгортання */
+/*
+   У розгорнутому:
+   показуємо решту.
+*/
 
 .friends-mini.expanded #online-friends li:nth-child(n + 5) {
   display: flex;
@@ -463,65 +641,48 @@
 
 
 /* =========================================================
-   СТАТУС
-   ========================================================= */
-
-.status-selector {
-  width: 100%;
-
-  box-sizing: border-box;
-
-  padding: 8px 4px;
-}
-
-.status-selector label {
-  display: block;
-
-  margin-bottom: 5px;
-
-  color: var(--text-muted);
-
-  font-size: 0.72rem;
-}
-
-.current-status {
-  padding: 8px 10px;
-
-  background: rgba(255,255,255,0.4);
-
-  border-radius: 9px;
-
-  font-size: 0.82rem;
-
-  text-align: center;
-}
-
-
-/* =========================================================
-   СТРІЧКА
+   СТРІЧКА ДОПИСІВ
    ========================================================= */
 
 .feed {
   display: flex;
   flex-direction: column;
 
-  gap: 12px;
+  gap: 0;
 }
 
+
+/*
+   Дописи не плавають окремими картками.
+   Вони йдуть один під одним, як у макеті.
+*/
+
 .post-card {
-  padding: 16px;
+  padding: 14px 18px;
+
+  margin: 0;
 
   display: flex;
   flex-direction: column;
 
-  gap: 10px;
+  gap: 9px;
+
+  border-radius: 0;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.65);
 }
+
+
+/* Заголовок допису */
 
 .post-header {
   display: flex;
   align-items: center;
 
   gap: 10px;
+
+  min-height: 28px;
 }
 
 .post-header .meta {
@@ -550,11 +711,19 @@
   letter-spacing: 0.04em;
 }
 
+
+/* Текст */
+
 .post-body {
   font-size: 0.95rem;
 
   line-height: 1.5;
+
+  min-height: 42px;
 }
+
+
+/* Лайки + коментарі справа */
 
 .post-actions {
   display: flex;
@@ -563,6 +732,8 @@
   justify-content: flex-end;
 
   gap: 10px;
+
+  min-height: 28px;
 
   font-size: 0.84rem;
 }
@@ -581,11 +752,14 @@
 
   border-radius: 8px;
 
+  border: 0;
+
   cursor: pointer;
 }
 
 .post-actions button:hover {
-  background: rgba(255,255,255,0.4);
+  background:
+    rgba(255,255,255,0.42);
 
   color: var(--accent);
 }
@@ -1332,6 +1506,16 @@
     overflow-y: auto;
   }
 
+  .content .main-nav {
+    overflow-x: auto;
+  }
+
+  .content .main-nav .nav-btn {
+    flex: 0 0 auto;
+
+    min-width: 70px;
+  }
+
   .me-panel {
     flex-direction: row;
 
@@ -1347,6 +1531,8 @@
   .me-panel .avatar {
     width: 55px;
     height: 75px;
+
+    flex-basis: 75px;
 
     border-radius: 18px 0 18px 0;
   }
@@ -1454,4 +1640,3 @@
     padding: 8px 4px;
   }
 }
-

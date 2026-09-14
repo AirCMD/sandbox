@@ -16,13 +16,19 @@
 .content {
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding-right: 4px;
 }
 
 .view {
   display: none;
   animation: fadeIn 0.25s ease;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .view.active {
@@ -355,17 +361,27 @@
 #view-chat {
   display: none;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
 }
 
 #view-chat.active {
-  display: flex;
+  display: flex !important;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#view-chat .view-header {
+  flex-shrink: 0;
 }
 
 .chat-messages {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 120px;
   overflow-y: auto;
-  padding: 12px 4px;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -401,6 +417,9 @@
 .chat-input-area {
   padding: 12px;
   margin-top: 8px;
+  flex-shrink: 0;
+  max-height: 42%;
+  overflow-y: auto;
 }
 
 .quick-replies {
@@ -668,10 +687,40 @@
   #online-friends { flex-direction: row; flex-wrap: wrap; }
   #online-friends li { font-size: 0.8rem; }
   .status-selector { display: block; }
-  .content { flex: 1; min-height: 0; }
+  .content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .sidebar {
+    max-height: 28vh;
+  }
+  /* У чаті — ще більше місця повідомленням */
+  body.chat-open .sidebar {
+    max-height: 56px;
+    overflow: hidden;
+  }
+  body.chat-open .me-panel,
+  body.chat-open .friends-mini,
+  body.chat-open .status-selector {
+    display: none !important;
+  }
+  body.chat-open .main-nav {
+    flex-wrap: nowrap;
+  }
+  #view-chat.active {
+    min-height: 0;
+  }
+  .chat-messages {
+    min-height: 180px;
+    flex: 1 1 0;
+  }
+  .chat-input-area {
+    max-height: 38%;
+  }
   .character-grid { grid-template-columns: 1fr 1fr; }
   .post-card { padding: 12px; }
-  .msg { max-width: 85%; }
+  .msg { max-width: 88%; font-size: 0.9rem; }
   .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 }
 
@@ -706,4 +755,15 @@
 .toast.show {
   opacity: 1;
   transform: translateY(0);
+}
+
+.msg.system {
+  align-self: center;
+  max-width: 90%;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.35);
+  border-radius: 12px;
+  padding: 6px 12px;
+  text-align: center;
 }

@@ -8,6 +8,18 @@
   <link rel="stylesheet" href="css/frutiger-aero.css">
 </head>
 <body>
+  <!-- Легкі CSS-бульбашки (вимкнуться при prefers-reduced-motion) -->
+  <div id="aero-bubbles" aria-hidden="true">
+    <span class="bubble b1"></span>
+    <span class="bubble b2"></span>
+    <span class="bubble b3"></span>
+    <span class="bubble b4"></span>
+    <span class="bubble b5"></span>
+    <span class="bubble b6"></span>
+    <span class="bubble b7"></span>
+    <span class="bubble b8"></span>
+  </div>
+
   <div class="app">
     <main class="content" id="main-content">
       <!-- Стрічка -->
@@ -25,7 +37,7 @@
       <!-- Мій профіль -->
       <section id="view-profile" class="view">
         <div class="profile-header glass" id="profile-header"></div>
-        <div class="profile-tabs">
+        <div class="profile-tabs panel nav-panel">
           <button class="tab active" data-tab="posts">Публікації</button>
           <button class="tab" data-tab="thoughts">Думки</button>
           <button class="tab" data-tab="friends">Друзі</button>
@@ -89,27 +101,30 @@
       </section>
     </main>
 
-    <!-- Права панель -->
-    <aside class="sidebar glass">
-      <div class="me-panel" id="me-panel"></div>
+    <!-- Права колонка (як у макеті) -->
+    <aside class="sidebar">
+      <div class="me-panel panel" id="me-panel"></div>
 
       <nav class="main-nav">
-        <button class="nav-btn active" data-view="feed"><span class="icon">📜</span><span>Стрічка</span></button>
-        <button class="nav-btn" data-view="profile"><span class="icon">👤</span><span>Профіль</span></button>
-        <button class="nav-btn" data-view="messages"><span class="icon">💬</span><span>Чати</span></button>
-        <button class="nav-btn" data-view="gallery"><span class="icon">🖼</span><span>Галерея</span></button>
-        <button class="nav-btn" data-view="games"><span class="icon">🎮</span><span>Ігри</span></button>
+        <button class="nav-btn panel" data-view="profile"><span>Профіль</span></button>
+        <button class="nav-btn panel active" data-view="feed"><span>Стрічка</span></button>
+        <button class="nav-btn panel" data-view="messages"><span>Чати</span></button>
+        <button class="nav-btn panel" data-view="gallery"><span>Галерея</span></button>
+        <button class="nav-btn panel" data-view="games"><span>Ігри</span></button>
       </nav>
 
-      <div class="friends-mini" id="friends-mini">
-        <h3>Онлайн</h3>
-        <ul id="online-friends"></ul>
+      <div class="friends-mini panel" id="friends-mini">
+        <button type="button" class="friends-toggle" id="friends-toggle" aria-expanded="false">
+          Друзі (показати всіх)
+        </button>
+        <div class="friends-preview" id="friends-preview"></div>
+        <ul id="online-friends" class="friends-list collapsed"></ul>
       </div>
 
-      <div class="status-selector glass" id="status-selector">
-        <label>Статус (лише перегляд)</label>
+      <div class="status-selector panel" id="status-selector">
+        <label>Статус / думки</label>
         <div class="current-status" id="current-status"></div>
-        <div style="margin-top:6px;font-size:0.8rem;color:var(--text-muted)" id="theme-label"></div>
+        <div style="margin-top:6px;font-size:0.75rem;opacity:0.85" id="theme-label"></div>
       </div>
     </aside>
   </div>

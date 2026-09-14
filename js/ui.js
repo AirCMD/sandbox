@@ -48,9 +48,7 @@ const UI = {
     const s = engine.getState(this.playerId);
     const online = s.online ? '<div class="status-online">онлайн</div>' : '<div class="status-online" style="color:#ffb0b0">офлайн</div>';
     document.getElementById("me-panel").innerHTML = `
-      <div class="avatar-frame panel">
-        <div class="avatar lg ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}cc,${c.color})">${c.emoji}</div>
-      </div>
+      <div class="avatar lg aero-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}cc,${c.color})">${c.emoji}</div>
       <div class="name">${c.name}</div>
       ${online}
       <div class="mood">${engine.moodLabel(s.mood, c.gender)}</div>
@@ -63,18 +61,92 @@ const UI = {
     this.applyTheme();
   },
 
+  friendsExpanded: false,
+
   renderOnlineFriends() {
     const ul = document.getElementById("online-friends");
+    const preview = document.getElementById("friends-preview");
+    const toggle = document.getElementById("friends-toggle");
+    if (!ul) return;
+
+    const friends = (engine.getState(this.playerId)?.friends || [])
+      .map(id => engine.getCharacter(id))
+      .filter(Boolean);
+    const onlineFirst = [...friends].sort((a, b) => {
+      const ao = engine.getState(a.id)?.online ? 1 : 0;
+      const bo = engine.getState(b.id)?.online ? 1 : 0;
+      return bo - ao;
+    });
+
+    // 2 аватарки-прев'ю вертикально
+    if (preview) {
+      const two = onlineFirst.slice(0, 2);
+      preview.innerHTML = two.map(c => {
+        const on = engine.getState(c.id)?.online;
+        return `<div class="friend-preview-item" data-id="${c.id}">
+          <div class="avatar sm aero-avatar ${on ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}aa,${c.color})">${c.emoji}</div>
+          <span class="friend-preview-name">${c.name.split(" ")[0]}</span>
+        </div>`;
+      }).join("") || `<span style="font-size:0.75rem;opacity:0.8">Немає друзів</span>`;
+      preview.querySelectorAll("[data-id]").forEach(el => {
+        el.onclick = () => this.openBotProfile(el.dataset.id);
+      });
+    }
+
     ul.innerHTML = "";
-    CHARACTERS.forEach(c => {
-      if (c.id === this.playerId) return;
+    ul.classList.toggle("collapsed", !this.friendsExpanded);
+    onlineFirst.forEach(c => {
       const st = engine.getState(c.id);
-      if (!st.online) return;
       const li = document.createElement("li");
-      li.innerHTML = `<div class="avatar sm online">${c.emoji}</div><span>${c.name.split(" ")[0]}</span>`;
-      li.onclick = () => this.openChat(c.id);
+      li.innerHTML = `<div class="avatar sm aero-avatar ${st.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}aa,${c.color})">${c.emoji}</div><span>${c.name.split(" ")[0]}${st.online ? "" : " · офлайн"}</span>`;
+      li.onclick = () => this.openBotProfile(c.id);
       ul.appendChild(li);
     });
+
+    if (toggle && !toggle._bound) {
+      toggle._bound = true;
+      toggle.onclick = () => {
+        this.friendsExpanded = !this.friendsExpanded;
+        toggle.setAttribute("aria-expanded", this.friendsExpanded ? "true" : "false");
+        toggle.textContent = this.friendsExpanded ? "Друзі (згорнути)" : "Друзі (показати всіх)";
+        this.renderOnlineFriends();
+      };
+    }
+    if (toggle) {
+      toggle.textContent = this.friendsExpanded ? "Друзі (згорнути)" : "Друзі (показати всіх)";
+      toggle.setAttribute("aria-expanded", this.friendsExpanded ? "true" : "false");
+    }
+  },
+
+
+  postCardHtml(post, { compact = false } = {}) {
+    const author = engine.getCharacter(post.author);
+    if (!author) return "";
+    const liked = post.likes.has(this.playerId);
+    const likesCount = post.likes.size;
+    const likeNames = [...post.likes].map(id => engine.getCharacter(id)?.name?.split(" ")[0]).filter(Boolean).join(", ");
+    const comments = (post.comments || []).map(cm => {
+      const ca = engine.getCharacter(cm.author);
+      return `<div class="comment">
+        <div class="avatar sm aero-avatar">${ca?.emoji || "?"}</div>
+        <div class="text"><span class="author" data-id="${cm.author}">${ca?.name || ""}</span> ${this.formatText(cm.text)}</div>
+      </div>`;
+    }).join("");
+    return `
+      <div class="post-header">
+        <div class="avatar aero-avatar ${engine.getState(post.author)?.online ? "online" : ""}" style="background:linear-gradient(145deg,${author.color}88,${author.color})">${author.emoji}</div>
+        <div class="meta">
+          <div class="author" data-id="${post.author}">${author.name}</div>
+          <div class="time">${post.weirdTime || ""}</div>
+        </div>
+      </div>
+      <div class="post-body">${this.formatText(post.text)}</div>
+      <div class="post-actions">
+        <button class="like-btn ${liked ? "liked" : ""}" data-id="${post.id}">${liked ? "❤️" : "🤍"} ${likesCount}</button>
+        <span class="likes-count">${likesCount ? "від " + likeNames.split(", ").slice(0, 3).join(", ") + (likesCount > 3 ? "…" : "") : "поки без вподобайок"}</span>
+      </div>
+      <div class="comments">${comments || '<p class="no-comments">Коментарів ще немає</p>'}</div>
+    `;
   },
 
   renderFeed(filterQuery) {
@@ -84,37 +156,11 @@ const UI = {
     if (filterQuery) posts = engine.searchPosts(filterQuery);
 
     posts.forEach(post => {
-      const author = engine.getCharacter(post.author);
-      if (!author) return;
+      if (!engine.getCharacter(post.author)) return;
       const card = document.createElement("article");
       card.className = "post-card glass";
-      const liked = post.likes.has(this.playerId);
-      const likesCount = post.likes.size;
-      const likeNames = [...post.likes].map(id => engine.getCharacter(id)?.name?.split(" ")[0]).filter(Boolean).join(", ");
-
-      card.innerHTML = `
-        <div class="post-header">
-          <div class="avatar ${engine.getState(post.author).online ? "online" : ""}" style="background:linear-gradient(145deg,${author.color}88,${author.color})">${author.emoji}</div>
-          <div class="meta">
-            <div class="author" data-id="${post.author}">${author.name}</div>
-            <div class="time">${post.weirdTime}</div>
-          </div>
-        </div>
-        <div class="post-body">${this.formatText(post.text)}</div>
-        <div class="post-actions">
-          <button class="like-btn ${liked ? "liked" : ""}" data-id="${post.id}">${liked ? "❤️" : "🤍"} ${likesCount}</button>
-          <span style="font-size:0.8rem;color:var(--text-muted)">${likesCount ? "від " + likeNames.split(", ").slice(0, 3).join(", ") + (likesCount > 3 ? "…" : "") : ""}</span>
-        </div>
-        <div class="comments">
-          ${post.comments.map(cm => {
-            const ca = engine.getCharacter(cm.author);
-            return `<div class="comment">
-              <div class="avatar sm">${ca?.emoji || "?"}</div>
-              <div class="text"><span class="author" data-id="${cm.author}">${ca?.name || ""}</span> ${this.formatText(cm.text)}</div>
-            </div>`;
-          }).join("")}
-        </div>
-      `;
+      card.dataset.postId = post.id;
+      card.innerHTML = this.postCardHtml(post);
       container.appendChild(card);
     });
 
@@ -123,6 +169,12 @@ const UI = {
       if (likeBtn) {
         engine.toggleLike(likeBtn.dataset.id, this.playerId);
         this.renderFeed(document.getElementById("search-posts")?.value);
+        // якщо відкритий профіль — теж оновити
+        const active = document.querySelector(".view.active");
+        if (active?.id === "view-profile") this.renderProfileTab("posts");
+        if (active?.id === "view-bot-profile") {
+          const id = document.querySelector("#bot-profile-header .author, #bot-profile-header [data-id]")?.dataset?.id;
+        }
         return;
       }
       const authorEl = e.target.closest(".author, .mention");
@@ -167,9 +219,10 @@ const UI = {
     const s = engine.getState(this.playerId);
 
     if (tab === "posts") {
-      const myPosts = engine.posts.filter(p => p.author === this.playerId);
+      const myPosts = engine.posts.filter(p => p.author === this.playerId).sort((a,b) => b.ts - a.ts);
       content.innerHTML = myPosts.length
-        ? myPosts.map(p => `<div class="post-card glass" style="margin-bottom:10px"><div class="post-body">${this.formatText(p.text)}</div><div class="time">${p.weirdTime}</div></div>`).join("")
+        ? myPosts.map(p => `<article class="post-card glass" style="margin-bottom:10px" data-post-id="${p.id}">${this.postCardHtml(p)}</article>`).join("")
+          + `<button class="btn" id="btn-new-post" style="margin-top:8px">Опублікувати щось</button>`
         : `<p style="color:var(--text-muted);padding:16px">Поки немає дописів.</p>
            <button class="btn" id="btn-new-post">Опублікувати щось</button>`;
       const btn = document.getElementById("btn-new-post");
@@ -178,6 +231,17 @@ const UI = {
         engine.addPost(this.playerId, texts[Math.floor(Math.random() * texts.length)]);
         this.renderProfileTab("posts");
         this.renderFeed();
+      };
+      content.onclick = (e) => {
+        const likeBtn = e.target.closest(".like-btn");
+        if (likeBtn) {
+          engine.toggleLike(likeBtn.dataset.id, this.playerId);
+          this.renderProfileTab("posts");
+          this.renderFeed(document.getElementById("search-posts")?.value);
+          return;
+        }
+        const authorEl = e.target.closest(".author, .mention");
+        if (authorEl?.dataset.id) this.openBotProfile(authorEl.dataset.id);
       };
     } else if (tab === "thoughts") {
       content.innerHTML = `<div class="glass" style="padding:16px">
@@ -242,24 +306,39 @@ const UI = {
     const s = engine.getState(id);
     const rel = engine.getRelation(this.playerId, id);
     document.getElementById("bot-profile-header").innerHTML = `
-      <div class="avatar lg ${s.online ? "online" : ""}" style="background:linear-gradient(145deg,${c.color}88,${c.color})">${c.emoji}</div>
-      <div class="profile-info">
-        <h2>${c.name}</h2>
-        <div class="bio">${c.bio}</div>
-        <div class="status-pill" style="margin-top:8px">${s.status}${engine.activityRemainingLabel(id) ? " · " + engine.activityRemainingLabel(id) : ""} · ${engine.moodLabel(s.mood, c.gender)}</div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" id="btn-message">Написати</button>
-          <button class="btn" id="btn-toggle-friend">${["friend","close","crush"].includes(rel) ? "Видалити з друзів" : "Додати в друзі"}</button>
-          <button class="btn" id="btn-meetup-profile">Запросити зустрітися</button>
-          <button class="btn-danger" id="btn-block-bot">Заблокувати</button>
+      <div class="bot-profile-row">
+        <div class="profile-info">
+          <h2 class="display-name">${c.name}</h2>
+          <div class="status-online">${s.online ? "онлайн" : "офлайн"}</div>
+          <div class="bio">${c.bio}</div>
+          <div class="status-pill" style="margin-top:8px">${s.status}${engine.activityRemainingLabel(id) ? " · " + engine.activityRemainingLabel(id) : ""} · ${engine.moodLabel(s.mood, c.gender)}</div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" id="btn-message">Написати</button>
+            <button class="btn" id="btn-toggle-friend">${["friend","close","crush"].includes(rel) ? "Видалити з друзів" : "Додати в друзі"}</button>
+            <button class="btn" id="btn-meetup-profile">Запросити зустрітися</button>
+            <button class="btn-danger" id="btn-block-bot">Заблокувати</button>
+          </div>
         </div>
+        <div class="avatar md aero-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(145deg,${c.color}88,${c.color})" data-id="${id}">${c.emoji}</div>
       </div>
     `;
-    const botPosts = engine.posts.filter(p => p.author === id);
-    document.getElementById("bot-profile-content").innerHTML = `
+    const botPosts = engine.posts.filter(p => p.author === id).sort((a,b) => b.ts - a.ts);
+    const contentEl = document.getElementById("bot-profile-content");
+    contentEl.innerHTML = `
       <h3 style="margin:16px 0 10px">Публікації</h3>
-      ${botPosts.map(p => `<div class="post-card glass" style="margin-bottom:10px"><div class="post-body">${this.formatText(p.text)}</div></div>`).join("") || "<p style='color:var(--text-muted)'>Немає дописів</p>"}
+      ${botPosts.map(p => `<article class="post-card glass" style="margin-bottom:10px" data-post-id="${p.id}">${this.postCardHtml(p)}</article>`).join("") || "<p style='color:var(--text-muted)'>Немає дописів</p>"}
     `;
+    contentEl.onclick = (e) => {
+      const likeBtn = e.target.closest(".like-btn");
+      if (likeBtn) {
+        engine.toggleLike(likeBtn.dataset.id, this.playerId);
+        this.openBotProfile(id);
+        this.renderFeed(document.getElementById("search-posts")?.value);
+        return;
+      }
+      const authorEl = e.target.closest(".author, .mention");
+      if (authorEl?.dataset.id) this.openBotProfile(authorEl.dataset.id);
+    };
     this.switchView("bot-profile");
 
     document.getElementById("btn-message").onclick = () => this.openChat(id);
@@ -311,37 +390,59 @@ const UI = {
       .filter(Boolean)
       .slice(0, 5)
       .join(", ");
+    const comments = engine.getGalleryComments(item.id);
+    const options = engine.getGalleryCommentOptions(item);
+    const commentsHtml = comments.map(cm => {
+      const ca = engine.getCharacter(cm.author);
+      return `<div class="comment"><div class="avatar sm aero-avatar">${ca?.emoji || "?"}</div>
+        <div class="text"><span class="author" data-id="${cm.author}">${ca?.name || ""}</span> ${this.formatText(cm.text)}</div></div>`;
+    }).join("") || '<p class="no-comments">Коментарів ще немає</p>';
+
     document.getElementById("modal-body").innerHTML = `
       <div style="font-size:4rem;text-align:center;margin-bottom:12px">${item.emoji}</div>
       <p><strong class="author" data-id="${item.author}" style="cursor:pointer">${author.name}</strong></p>
       <p style="margin:8px 0">${item.desc}</p>
       <p style="font-size:0.85rem;color:var(--text-muted)">Теги: ${item.tags.join(", ")}</p>
-      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:6px" id="gallery-like-info">
+      <p style="font-size:0.85rem;margin-top:6px" id="gallery-like-info">
         ${count ? "❤️ " + count + (likers ? " · " + likers : "") : "Поки без вподобайок"}
       </p>
-      <div style="margin-top:16px">
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="btn-gallery-like">${liked ? "❤️ Подобається" : "🤍 Подобається"}</button>
-        <button class="btn-danger" style="margin-left:8px" id="btn-gallery-report">Скарга</button>
+        <button class="btn-danger" id="btn-gallery-report">Скарга</button>
+      </div>
+      <div class="gallery-comments" style="margin-top:16px">
+        <h3 style="font-size:0.95rem;margin-bottom:8px">Коментарі</h3>
+        <div id="gallery-comments-list">${commentsHtml}</div>
+        <p style="font-size:0.8rem;margin:10px 0 6px;opacity:0.9">Твій коментар (обери):</p>
+        <div class="quick-replies" id="gallery-comment-options">
+          ${options.map((o, i) => `<button type="button" data-opt="${i}">${this.escape(o)}</button>`).join("")}
+        </div>
       </div>
     `;
     document.getElementById("gallery-modal").hidden = false;
 
-    const likeBtn = document.getElementById("btn-gallery-like");
-    likeBtn.onclick = () => {
-      const nowLiked = engine.toggleGalleryLike(item.id, this.playerId);
-      const n = engine.getGalleryLikeCount(item.id);
-      likeBtn.textContent = nowLiked ? "❤️ Подобається" : "🤍 Подобається";
-      const names = [...(engine.galleryLikes[item.id] || [])]
-        .map(id => engine.getCharacter(id)?.name?.split(" ")[0])
-        .filter(Boolean)
-        .slice(0, 5)
-        .join(", ");
-      const info = document.getElementById("gallery-like-info");
-      if (info) info.textContent = n ? "❤️ " + n + (names ? " · " + names : "") : "Поки без вподобайок";
+    document.getElementById("btn-gallery-like").onclick = () => {
+      engine.toggleGalleryLike(item.id, this.playerId);
+      this.openGalleryModal(item);
       this.renderGallery();
     };
     document.getElementById("btn-gallery-report").onclick = () => {
       alert("Скаргу надіслано. Модератори (тобто ніхто) подивляться… колись.");
+    };
+    document.getElementById("gallery-comment-options").onclick = (e) => {
+      const btn = e.target.closest("button[data-opt]");
+      if (!btn) return;
+      const text = options[+btn.dataset.opt];
+      if (!text) return;
+      engine.addGalleryComment(item.id, this.playerId, text);
+      this.openGalleryModal(item);
+    };
+    document.getElementById("modal-body").onclick = (e) => {
+      const a = e.target.closest(".author");
+      if (a?.dataset.id) {
+        document.getElementById("gallery-modal").hidden = true;
+        this.openBotProfile(a.dataset.id);
+      }
     };
   },
 
@@ -577,3 +678,4 @@ const UI = {
     this.renderFeed();
   }
 };
+

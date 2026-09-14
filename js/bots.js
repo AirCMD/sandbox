@@ -15,6 +15,7 @@ class BotEngine {
     this.gossipLog = [];
     // Лайки галереї: { itemId: Set of userIds }
     this.galleryLikes = {};
+    this.galleryComments = {};
     // Статистика гравця для досягнень
     this.stats = {
       likes: 0,
@@ -487,12 +488,93 @@ class BotEngine {
     if (typeof GALLERY === "undefined") return;
     GALLERY.forEach(item => {
       const set = new Set();
-      // кілька випадкових лайків від ботів
       CHARACTERS.forEach(c => {
-        if (c.id !== item.author && Math.random() > 0.55) set.add(c.id);
+        if (c.id !== item.author && Math.random() > 0.5) set.add(c.id);
       });
       this.galleryLikes[item.id] = set;
+      const used = new Set();
+      const comments = [];
+      const order = [...CHARACTERS].sort(() => Math.random() - 0.5);
+      for (const c of order) {
+        if (c.id === item.author || Math.random() > 0.55) continue;
+        const text = this.makeGalleryComment(item, c.id, used);
+        if (!text) continue;
+        used.add(this.normPhrase(text));
+        comments.push({ author: c.id, text, ts: Date.now() - Math.random() * 1e7 });
+        if (comments.length >= 3) break;
+      }
+      this.galleryComments[item.id] = comments;
     });
+  }
+
+  getGalleryComments(itemId) {
+    return this.galleryComments[itemId] || [];
+  }
+
+  addGalleryComment(itemId, authorId, text) {
+    if (!this.galleryComments[itemId]) this.galleryComments[itemId] = [];
+    this.galleryComments[itemId].push({ author: authorId, text, ts: Date.now() });
+    setTimeout(() => {
+      const item = (typeof GALLERY !== "undefined" ? GALLERY : []).find(g => g.id == itemId);
+      if (!item) return;
+      const bots = CHARACTERS.filter(c => c.id !== authorId && this.state[c.id]?.online);
+      if (!bots.length || Math.random() > 0.65) return;
+      const bot = bots[Math.floor(Math.random() * bots.length)];
+      const used = new Set(this.galleryComments[itemId].map(c => this.normPhrase(c.text)));
+      const reply = this.makeGalleryComment(item, bot.id, used, text);
+      if (reply) {
+        this.galleryComments[itemId].push({ author: bot.id, text: reply, ts: Date.now() });
+        if (typeof UI !== "undefined") {
+          try {
+            const modal = document.getElementById("gallery-modal");
+            if (modal && !modal.hidden) UI.openGalleryModal(item);
+          } catch (_) {}
+        }
+      }
+    }, 1500 + Math.random() * 2500);
+  }
+
+  getGalleryCommentOptions(item) {
+    const blob = ((item.tags || []).join(" ") + " " + (item.desc || "")).toLowerCase();
+    const base = [];
+    const add = (arr) => arr.forEach(x => { if (!base.includes(x)) base.push(x); });
+    if (/стікер|блокнот|канцеляр/.test(blob)) add(["Які стікери любиш найбільше?", "Розворот дуже затишний", "Де брала/брав блокноти?"]);
+    if (/код|програм|скрін/.test(blob)) add(["Скільки годин пішло?", "Виглядає серйозно. Мова яка?", "Нічний код — класика"]);
+    if (/кінь|подорож|пейзаж|схід|пробіж/.test(blob)) add(["Де це знято?", "Заздрю такому ранку", "Природа тут ідеальна"]);
+    if (/аніме|колекц|дакімакур/.test(blob)) add(["З якої серії?", "Колекція росте", "Гарний кадр для полиці"]);
+    if (/іграш|рукоділ|шила/.test(blob)) add(["Сама зшила? Красиво", "Можна купити таку?", "Дуже мило виглядає"]);
+    if (/стрім|ігр|сетап|навуш/.test(blob)) add(["Який мікрофон?", "Сетап вогонь", "Коли наступний стрім?"]);
+    if (/дощ|вікно|настрій|самот/.test(blob)) add(["Настрій відчувається", "Тиша після дощу особлива", "Гарний кадр, навіть якщо сумно"]);
+    if (/барахол|короб|продаж/.test(blob)) add(["Що цікавого в партії?", "Ціна нормальна була?", "Люблю такі знахідки"]);
+    if (/снек|журнал|пакет/.test(blob)) add(["Смішний колаж", "Скільки вже пакетів?", "Це вже мистецтво"]);
+    add(["Дякую, що показала/показав", "Зберегла/зберіг у голові", "Дуже атмосферно", "Під цим можу підписатись"]);
+    const gender = (typeof UI !== "undefined" && UI.playerId) ? (this.getCharacter(UI.playerId)?.gender || "f") : "f";
+    return base.slice(0, 5).map(x => this.genderize(x, gender));
+  }
+
+  makeGalleryComment(item, speakerId, usedSet = null, replyTo = "") {
+    const gender = this.getCharacter(speakerId)?.gender || "f";
+    const tags = ((item.tags || []).join(" ") + " " + (item.desc || "") + " " + (replyTo || "")).toLowerCase();
+    let pool = [];
+    if (/стікер|блокнот/.test(tags)) pool = ["Стікери — слабкість", "Розворот ідеальний", "Канцелярія завжди заходить"];
+    else if (/код|програм/.test(tags)) pool = ["Пізно, але продуктивно", "Очі після такого печуть, знаю", "Гарна структура"];
+    else if (/кінь|подорож|схід|пробіж/.test(tags)) pool = ["Заздрю повітрю на фото", "Ранок як з листівки", "Треба теж вийти з дому"];
+    else if (/аніме|колекц/.test(tags)) pool = ["Полиця мрії", "Знайомий вайб", "Колекція солідна"];
+    else if (/іграш|рукоділ/.test(tags)) pool = ["Дуже тепло вийшло", "Руки золоті", "Хочу таку на полицю"];
+    else if (/стрім|сетап|ігр/.test(tags)) pool = ["Сетап зібраний зі смаком", "Готовий/готова до ефіру", "Гарне світло"];
+    else if (/дощ|вікно|сум/.test(tags)) pool = ["Атмосфера сильна", "Розумію цей настрій", "Тихо і чесно"];
+    else if (/барахол|короб/.test(tags)) pool = ["Бізнес не спить", "Цікаво, що всередині", "Знахідки — окремий кайф"];
+    else if (/снек|пакет/.test(tags)) pool = ["Хаха, серйозна колекція", "Це вже музей", "Смішно і мило"];
+    else pool = ["Гарний кадр", "Зайшло", "Дякую, що поділилась/поділився", "Атмосферно"];
+    if (replyTo) {
+      pool = ["Згоден/згодна з цим", "Теж так думаю", "Доречне питання", "Можу в особисті детальніше"].concat(pool);
+    }
+    const free = pool.filter(x => {
+      const n = this.normPhrase(this.genderize(x, gender));
+      return n && !(usedSet && usedSet.has(n));
+    });
+    if (!free.length) return null;
+    return this.genderize(free[Math.floor(Math.random() * free.length)], gender);
   }
 
   getGalleryLikeCount(itemId) {
@@ -553,8 +635,15 @@ class BotEngine {
             used.add(this.normPhrase(text));
             post.comments.push({ author: c.id, text });
             if (typeof UI !== "undefined" && UI.playerId) {
-              // оновити стрічку, якщо відкрита
-              try { UI.renderFeed(document.getElementById("search-posts")?.value || ""); } catch (_) {}
+              try {
+                UI.renderFeed(document.getElementById("search-posts")?.value || "");
+                const active = document.querySelector(".view.active");
+                if (active?.id === "view-profile" && post.author === UI.playerId) UI.renderProfileTab("posts");
+                if (active?.id === "view-bot-profile") {
+                  const hid = document.querySelector("#bot-profile-header .aero-avatar, #bot-profile-header [data-id]");
+                  // reopen soft refresh via feed only
+                }
+              } catch (_) {}
             }
           }
         }
@@ -722,7 +811,77 @@ class BotEngine {
       ]);
     }
 
-    // Спецдіалоги — лише іноді і якщо не ехо
+    // Питання «чому / навіщо»
+    if (/чому|навіщо|зачім|з якої/.test(msg)) {
+      return pick([
+        "Чесно? Просто так склалось.",
+        "Довго пояснювати, але коротко — так треба було.",
+        status ? `Зараз ${status}, тому трохи не до розмов.` : "Не завжди маю готову відповідь.",
+        "Можу розказати пізніше, якщо серйозно цікавить."
+      ]);
+    }
+
+    // Так / ні / згоден
+    if (/^(так|ні|неа|ага|угу|добре|окей|ок)\b/.test(msg)) {
+      return pick(["Ок.", "Добре.", "Зрозуміла/зрозумів.", "Тоді так і зробимо.", "Гаразд."]);
+    }
+
+    // Питання про роботу / статус
+    if (/робот|магазин|змін|кол[еє]г/.test(msg)) {
+      const job = me?.job || "свої справи";
+      return pick([
+        `Працюю як ${job}. Буває по-різному.`,
+        "Робота є робота. Після зміни відпускає.",
+        "Сьогодні зміна нормальна, без сюрпризів."
+      ]);
+    }
+
+    // Питання про інших персонажів на ім'я
+    for (const other of CHARACTERS) {
+      const first = other.name.split(" ")[0].toLowerCase();
+      if (other.id === toId) continue;
+      if (msg.includes(first) || msg.includes(other.id)) {
+        const r = this.getRelation(toId, other.id);
+        if (r === "crush") return pick([`Про ${first}… складно коротко.`, `${first} багато значить, але не все просто.`, "Краще не розводити плітки."]);
+        if (r === "annoyed") return pick([`${first}? Краще не починай.`, "Не хочу про це.", "Тема закрита."]);
+        if (r === "close" || r === "friend") return pick([`${first} — нормальна людина, спілкуємось.`, `З ${first} ок. А що саме цікавить?`, "Можу передати привіт, якщо треба."]);
+        return pick([`Знаю ${first}, але не дуже близько.`, "Чула/чув щось, але без деталей.", "Не моя історія розповідати."]);
+      }
+    }
+
+    // Питання про інтереси з ключових слів
+    if (/тамагоч|стікер|блокнот|медитац|мультивсесвіт/.test(msg) && toId === "yani") {
+      return pick(["О, моя тема ✨", "Можу годинами про стікери і блокноти.", "Тамагочі зараз у доброму настрої, до речі."]);
+    }
+    if (/плітк|чутк|снек|пакет/.test(msg) && toId === "jini") {
+      return pick(["Плітки не безкоштовні 😏", "Є одна історія… але тихо.", "Пакети від снеків — окрема естетика."]);
+    }
+    if (/пісн|іграшк|дерека|derek/.test(msg) && toId === "sayuri") {
+      return pick(["Пісні пишу, коли не сплю від думок.", "Іграшки допомагають, коли сумно.", "Про Дерека… боляче і все ще сподіваюсь."]);
+    }
+    if (/кінь|подорож|тренув/.test(msg) && toId === "kate") {
+      return pick(["Коні — краще за більшість людей.", "Завжди в дорозі, майже.", "Можу скинути маршрут, якщо цікаво."]);
+    }
+    if (/код|програм|баг|ніч/.test(msg) && toId === "giki") {
+      return pick(["Код зараз стабільніший за сон.", "Баги люблять ніч. Я теж, на жаль.", "Можу глянути, якщо скинув/скинула фрагмент."]);
+    }
+    if (/стрім|ігр|фастфуд/.test(msg) && toId === "akira") {
+      return pick(["Стрім майже щодня, якщо голос тримає.", "Ігри + їжа = робочий процес.", "Залітай на ефір, якщо не спиш."]);
+    }
+    if (/барахол|продаж|бізнес|грош/.test(msg) && toId === "cornel") {
+      return pick(["Це не схеми, це маржа 😏", "На барахолці інший світ.", "Можу дістати рідкісне — за питанням."]);
+    }
+    if (/кейт|kate|біс|натяк/.test(msg) && toId === "derek") {
+      return pick(["Кейт хоч не душить повідомленнями.", "Не всі розуміють прості «ні».", "Краще не чіпай цю тему."]);
+    }
+    if (/біг|спорт|пробіж|кейт/.test(msg) && toId === "kent") {
+      return pick(["Сьогодні вже відбігав свою норму.", "Спорт тримає голову на місці.", "З Кейт є про що говорити без драми."]);
+    }
+    if (/аніме|дакімакур|лол/.test(msg) && toId === "jura") {
+      return pick(["Нова фігура майже приїхала.", "Аніме краще за світло дня.", "Не всі це розуміють — і добре."]);
+    }
+
+        // Спецдіалоги — лише іноді і якщо не ехо
     const special = SPECIAL_DIALOGS[`${toId}_${fromId}`];
     if (special && Math.random() > 0.55) {
       const s = pick(special);

@@ -1122,3 +1122,144 @@ body.theme-orange::before {
 @media (max-width: 900px), (prefers-reduced-motion: reduce) {
   #aero-bubbles { display: none !important; }
 }
+
+/* ---- Фон з макета (розмиття 2px) ---- */
+body::before {
+  background-image: url('https://blogger.googleusercontent.com/img/a/AVvXsEhfOktjrsqyQcDeS-zeQFyV9bMTv_cR2USkx8Pfepkq6myuowsEhtzjAwEOzEM9urTSI80xv6mYykRJByUUVNrbupsFnY2-RKGgCmDP3uoSOwqOjIvEae5XIN4Wo0tCt7qMCocdwa8kjdMg9jDxZ142ySbgWKigYy58t_KGRW92p-YOXZjmY2HjMSBcsQ8') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  filter: blur(2px) !important;
+  transform: scale(1.05) !important;
+}
+
+/* ---- Форма аватара: ЛІВИЙ верх + ПРАВИЙ низ ---- */
+.aero-avatar,
+.avatar {
+  border-radius: 18px 6px 18px 6px !important;
+  border: 2px solid rgba(255,255,255,0.75) !important;
+  box-shadow: 0 3px 10px rgba(0,40,90,0.3) !important;
+  overflow: hidden;
+}
+.avatar.lg,
+.aero-avatar.lg {
+  width: 120px !important;
+  height: 150px !important;
+  font-size: 3rem !important;
+  border-radius: 26px 8px 26px 8px !important;
+}
+.avatar.md {
+  width: 72px !important;
+  height: 90px !important;
+  font-size: 2rem !important;
+  flex-shrink: 0;
+}
+.avatar.sm {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 1rem !important;
+  border-radius: 10px 3px 10px 3px !important;
+}
+/* без зайвої білої рамки */
+.avatar-frame { display: none !important; }
+.me-panel .avatar.lg {
+  margin: 0 auto 6px;
+}
+
+/* Профіль бота: текст зліва, аватар справа */
+.bot-profile-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+}
+.bot-profile-row .profile-info {
+  flex: 1;
+  min-width: 0;
+}
+.bot-profile-row .avatar.md {
+  margin-top: 4px;
+}
+#bot-profile-header.glass,
+#bot-profile-header.panel {
+  padding: 18px 20px !important;
+}
+
+/* Друзі: кнопка + 2 прев'ю вертикально */
+.friends-toggle {
+  width: 100%;
+  padding: 10px 12px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  text-shadow: var(--shadow-text);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  cursor: pointer;
+}
+.friends-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 10px 10px;
+}
+.friend-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.friend-preview-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+  text-shadow: var(--shadow-text);
+  text-align: center;
+}
+.friends-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 10px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.friends-list.collapsed {
+  display: none !important;
+}
+.friends-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text);
+  text-shadow: var(--shadow-text);
+}
+.no-comments {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin: 4px 0;
+}
+.gallery-comments .quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gallery-comments .quick-replies button {
+  font-size: 0.8rem !important;
+  padding: 6px 10px !important;
+}
+
+@media (max-width: 800px) {
+  .bot-profile-row { flex-direction: row; }
+  .avatar.md { width: 56px !important; height: 70px !important; font-size: 1.5rem !important; }
+  .me-panel .avatar.lg { width: 56px !important; height: 56px !important; font-size: 1.5rem !important; border-radius: 14px 4px 14px 4px !important; }
+}

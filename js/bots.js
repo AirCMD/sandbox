@@ -113,11 +113,14 @@ class BotEngine {
   init() {
     const now = Date.now();
     CHARACTERS.forEach(c => {
+      const act = this.pickActivity(c);
       this.state[c.id] = {
         mood: c.defaultMood,
-        status: this.pickStatus(c),
+        status: act.status,
+        activityUntil: act.until,
+        activityKind: act.kind,
         thought: this.pickThought(c.defaultMood, c.gender),
-        online: this.shouldBeOnline(c),
+        online: this.shouldBeOnline(c, act),
         lastActive: now - Math.random() * 3600000,
         friends: Object.entries(this.relations[c.id] || {})
           .filter(([, r]) => ["friend", "close", "crush"].includes(r))
@@ -144,17 +147,94 @@ class BotEngine {
     this.scheduleTicks();
   }
 
-  pickStatus(char) {
-    if (char.isOwl && this.isDay()) {
-      return ["сплю", "не турбувати", "відпочиваю"][Math.floor(Math.random() * 3)];
+  /**
+   * Тривалість активностей у РЕАЛЬНИХ хвилинах (1:1).
+   * Кіно / кінотеатр — мінімум ~1.5–2.5 години, робота — зміни, сон — довго.
+   */
+  activityDurationMin(status) {
+    const table = {
+      "в кінотеатрі": [100, 160],
+      "в кафе з друзями": [60, 150],
+      "на побаченні": [90, 180],
+      "на побаченні (у фантазіях)": [25, 50],
+      "граю в ігри": [45, 120],
+      "на стрімі": [90, 210],
+      "дивлюсь стрім": [50, 140],
+      "дивлюсь кіно": [100, 155],
+      "дивлюсь кіно про мультивсесвіт": [100, 155],
+      "дивлюсь аніме": [24, 50],
+      "сплю": [240, 480],
+      "приймаю душ": [15, 30],
+      "у ванній": [20, 40],
+      "бігаю": [30, 60],
+      "на тренуванні": [50, 100],
+      "на тренуванні з кіньми": [60, 120],
+      "пишу код": [50, 150],
+      "дебажу програму": [40, 100],
+      "працюю": [120, 240],
+      "працюю в аніме-магазині": [180, 300],
+      "працюю в магазині іграшок": [180, 300],
+      "на роботі в Техсмітнику": [180, 300],
+      "на поштовому відділенні": [150, 270],
+      "на барахолці": [50, 120],
+      "в дорозі": [40, 100],
+      "медитую": [20, 45],
+      "співаю": [25, 55],
+      "не турбувати": [40, 100],
+      "не турбувати (код)": [50, 120],
+      "відпочиваю": [30, 90],
+      "їм їжу": [20, 45]
+    };
+    const range = table[status] || [25, 60];
+    return range[0] + Math.random() * (range[1] - range[0]);
+  }
+
+  /** Реальні хвилини → мс (без прискорення: кіно реально 1.5–2.5 год) */
+  gameMinutesToMs(min) {
+    return min * 60 * 1000;
+  }
+
+  isBusyStatus(status) {
+    return /кінотеатр|кафе з друзями|побаченн|сплю|душ|ванн|стрімі|тренуванн|в дорозі|не турбувати/i.test(status || "");
+  }
+
+  pickActivity(char) {
+    const now = Date.now();
+    if (char.isOwl && this.isDay() && Math.random() > 0.35) {
+      const status = ["сплю", "не турбувати", "відпочиваю"][Math.floor(Math.random() * 3)];
+      const mins = this.activityDurationMin(status);
+      return { status, kind: "rest", until: now + this.gameMinutesToMs(mins), gameMinutes: mins };
     }
     const personal = STATUS_BY_CHAR[char.id] || [];
     const common = char.gender === "m" ? STATUS_COMMON_M : STATUS_COMMON_F;
-    // 70% шанс особистого статусу, 30% побутового
-    const pool = Math.random() < 0.7 && personal.length
-      ? personal
-      : [...personal, ...common];
-    return pool[Math.floor(Math.random() * pool.length)];
+    const pool = Math.random() < 0.75 && personal.length ? personal : [...personal, ...common];
+    const status = pool[Math.floor(Math.random() * pool.length)];
+    const mins = this.activityDurationMin(status);
+    return {
+      status,
+      kind: this.isBusyStatus(status) ? "busy" : "idle",
+      until: now + this.gameMinutesToMs(mins),
+      gameMinutes: mins
+    };
+  }
+
+  /** Застарілий API — лише рядок статусу */
+  pickStatus(char) {
+    return this.pickActivity(char).status;
+  }
+
+  activityRemainingLabel(id) {
+    const st = this.state[id];
+    if (!st?.activityUntil) return "";
+    const leftMs = st.activityUntil - Date.now();
+    if (leftMs <= 0) return "";
+    const minLeft = leftMs / (60 * 1000);
+    if (minLeft >= 60) {
+      const h = Math.floor(minLeft / 60);
+      const m = Math.round(minLeft % 60);
+      return `ще ~${h} год${m ? " " + m + " хв" : ""}`;
+    }
+    return `ще ~${Math.max(1, Math.round(minLeft))} хв`;
   }
 
   pickThought(mood, gender = "f") {
@@ -170,7 +250,11 @@ class BotEngine {
     return t;
   }
 
-  shouldBeOnline(char) {
+  shouldBeOnline(char, act) {
+    const status = act?.status || this.state[char.id]?.status;
+    // Під час сну / душу / кіно — частіше «не в мережі»
+    if (/^сплю$|приймаю душ|у ванній/i.test(status || "")) return Math.random() > 0.85;
+    if (/в кінотеатрі|на побаченні$|в дорозі/i.test(status || "")) return Math.random() > 0.55;
     const hour = new Date().getHours();
     if (char.isOwl) return hour >= 22 || hour < 8 || Math.random() > 0.55;
     return hour >= 8 && hour < 23 ? Math.random() > 0.25 : Math.random() > 0.75;
@@ -190,16 +274,23 @@ class BotEngine {
 
   generateInitialComments(post) {
     const comments = [];
-    CHARACTERS.forEach(c => {
-      if (c.id === post.author || Math.random() > 0.5) return;
+    const used = new Set();
+    const order = [...CHARACTERS].sort(() => Math.random() - 0.5);
+    for (const c of order) {
+      if (c.id === post.author || Math.random() > 0.42) continue;
       const rel = this.relations[c.id]?.[post.author] || "neutral";
-      if (rel === "blocked") return;
-      comments.push({
-        author: c.id,
-        text: this.makeComment(rel, this.state[c.id]?.mood || "спокійний", post.text, c.id)
-      });
-    });
-    return comments.slice(0, 4);
+      if (rel === "blocked") continue;
+      const text = this.makeComment(rel, this.state[c.id]?.mood || "спокійний", post.text, c.id, used);
+      if (!text) continue;
+      used.add(this.normPhrase(text));
+      comments.push({ author: c.id, text });
+      if (comments.length >= 4) break;
+    }
+    return comments;
+  }
+
+  normPhrase(t) {
+    return (t || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim();
   }
 
   /** Підставляє форми за статтю мовця: m / f */
@@ -251,19 +342,100 @@ class BotEngine {
       .replace(/Ти мені важлива/g, "Ти мені важливий");
   }
 
-  makeComment(rel, mood, postText, speakerId) {
+  makeComment(rel, mood, postText, speakerId, usedSet = null) {
     const gender = this.getCharacter(speakerId)?.gender || "f";
-    let pool;
-    if (rel === "annoyed") pool = ["Серйозно?", "Бісить вже", "Не читай це."];
-    else if (rel === "crush") pool = ["Ти завжди так пишеш... ✨", "Подобається", "Згадав/згадала тебе"];
-    else if (rel === "close") pool = gender === "f"
-      ? ["Кіса, ти топ 💕", "Розкажи детальніше!", "Я з тобою"]
-      : ["Ти топ", "Розкажи детальніше!", "Я з тобою"];
-    else if (mood === "сумний") pool = ["Розумію...", "Тримайся", "Я поруч"];
-    else if (mood === "веселий") pool = ["Хаха 😂", "Це смішно!", "Підтримую!"];
-    else if (mood === "злий" || mood === "роздратований") pool = ["Ну ок", "Ага", "Цікаво..."];
-    else pool = ["Круто", "Згоден/згодна", "Гарно", "👍"];
-    return this.genderize(pool[Math.floor(Math.random() * pool.length)], gender);
+    const speaker = this.getCharacter(speakerId);
+    const pt = (postText || "").toLowerCase();
+    const pick = (arr) => {
+      const free = arr.filter(t => {
+        const n = this.normPhrase(this.genderize(t, gender));
+        if (!n || n.length < 2) return false;
+        if (usedSet && usedSet.has(n)) return false;
+        // не повторювати дуже короткі однотипні («добре», «ок», «ага»)
+        if (usedSet && n.length <= 6) {
+          for (const u of usedSet) if (u.length <= 6 && (u === n || u.includes(n) || n.includes(u))) return false;
+        }
+        return true;
+      });
+      if (!free.length) return null;
+      return free[Math.floor(Math.random() * free.length)];
+    };
+
+    let pool = [];
+
+    // Реакція на зміст допису
+    if (/кіно|фільм|сеанс/.test(pt)) {
+      pool = ["Теж хочу в кіно на вихідних", "Що саме дивились?", "О, і як враження після титрів?", "Я б склала/склав компанію"];
+    } else if (/код|програм|дебаж|баг/.test(pt)) {
+      pool = ["Поважаю терпіння з багами", "У мене теж був такий вечір у редакторі", "Головне — не спалити дедлайн", "Якщо що, можу глянути свіжим оком"];
+    } else if (/тамагочі|стікер|блокнот|канцеляр/.test(pt)) {
+      pool = ["Покажи фото колекції, якщо можна", "Я б таке теж хотіла/хотів", "Канцелярія — слабка сторона 😅", "Звучить затишно"];
+    } else if (/біг|спорт|тренув|кінь|коні/.test(pt)) {
+      pool = ["Повага до дисципліни", "Я б так не змогла/не зміг щодня", "Погода сьогодні якраз для цього", "Тримай темп 💪"];
+    } else if (/аніме|дакімакур|стрім|ігр/.test(pt)) {
+      pool = ["Що за тайтл/гру?", "Класика нічного сеансу", "Скинь назву, цікаво", "Знайоме відчуття"];
+    } else if (/сумн|поган|важк|самот|втоми/.test(pt)) {
+      pool = ["Чую тебе. Якщо треба — напиши в особисті", "Тримайся, це мине", "Не треба тримати все в собі", "Можна просто помовчати разом"];
+    } else if (/плітк|чутк|біс|дратує|відмов/.test(pt)) {
+      pool = ["Ого, напруга…", "Краще б без публічного розносу", "Некомфортно це читати, чесно", "Може, варто охолонути?"];
+    }
+
+    if (!pool.length) {
+      if (rel === "annoyed") {
+        pool = ["Серйозно?", "Краще б не бачила/не бачив цього", "Мені вже досить таких постів", "Не мій формат"];
+      } else if (rel === "crush") {
+        pool = ["Завжди цікаво читати твої думки", "Усміхнулась/усміхнувся, читаючи", "Напиши ще, якщо буде бажання", "Ти вмієш підмічати дрібниці"];
+      } else if (rel === "close") {
+        pool = [
+          "Розкажи трохи більше, цікаво",
+          "Я б з тобою про це поговорила/поговорив",
+          "Звучить по-твоєму",
+          "Зберегла/зберіг у голові",
+          speaker?.id === "jini" ? "О, є деталі? Я вся увага 👀" : "Підтримую"
+        ];
+      } else if (mood === "сумний") {
+        pool = ["Розумію настрій", "Сьогодні важкуватий день і в мене", "Дякую, що ділишся", "Нехай хоч трохи відпустить"];
+      } else if (mood === "веселий") {
+        pool = ["Це підняло настрій", "Ха, добре написано", "Усмішка неконтрольована", "Зайшло"];
+      } else if (mood === "злий" || mood === "роздратований") {
+        pool = ["Ну… ок", "Не в настрої розганяти", "Прочитала/прочитав, далі"];
+      } else {
+        pool = [
+          "Цікавий погляд",
+          "Має сенс",
+          "Не подумала/не подумав з такого боку",
+          "Дякую, що написала/написав",
+          "Під цим можу підписатись",
+          "Збережу на потім",
+          "Трохи резонує",
+          "Спокійно і по суті — імпонує"
+        ];
+      }
+    }
+
+    // Унікальний кут від особистості
+    if (speaker?.id === "cornel" && Math.random() > 0.5) {
+      pool = pool.concat(["Чув іншу версію цієї історії…", "Цікаво, хто ще це бачив"]);
+    }
+    if (speaker?.id === "giki" && Math.random() > 0.55) {
+      pool = pool.concat(["Логічно складено", "Можна було б ще глибше копнути"]);
+    }
+    if (speaker?.id === "derek" && Math.random() > 0.6) {
+      pool = pool.concat(["Як завжди, всі все знають…", "Мене вже мало що дивує"]);
+    }
+
+    const chosen = pick(pool);
+    if (!chosen) {
+      // останній шанс — довша унікальна фраза
+      const fallback = [
+        `Про ${speaker?.interests?.[0] || "це"} я б ще поговорила/поговорив`,
+        "Залишу без короткого «ок» — просто побачила/побачив і відзначила/відзначив",
+        "Мовчки ставлю вподобайку в голові"
+      ];
+      const fb = pick(fallback);
+      return fb ? this.genderize(fb, gender) : null;
+    }
+    return this.genderize(chosen, gender);
   }
 
   getCharacter(id) { return CHARACTERS.find(c => c.id === id); }
@@ -360,18 +532,33 @@ class BotEngine {
   }
 
   botsReactToPost(post) {
-    CHARACTERS.forEach(c => {
-      if (c.id === post.author || !this.state[c.id].online) return;
-      if (Math.random() > 0.5) return;
-      const rel = this.getRelation(c.id, post.author);
-      if (rel === "blocked") return;
-      if (Math.random() > 0.35) post.likes.add(c.id);
-      if (Math.random() > 0.6) {
-        post.comments.push({
-          author: c.id,
-          text: this.makeComment(rel, this.state[c.id].mood, post.text, c.id)
-        });
-      }
+    const used = new Set((post.comments || []).map(c => this.normPhrase(c.text)));
+    const online = CHARACTERS.filter(c =>
+      c.id !== post.author && this.state[c.id]?.online && this.getRelation(c.id, post.author) !== "blocked"
+    ).sort(() => Math.random() - 0.5);
+
+    online.forEach((c, i) => {
+      // не всі одразу — розкидано
+      setTimeout(() => {
+        if (Math.random() > 0.55) post.likes.add(c.id);
+        if (Math.random() > 0.45) {
+          const text = this.makeComment(
+            this.getRelation(c.id, post.author),
+            this.state[c.id].mood,
+            post.text,
+            c.id,
+            used
+          );
+          if (text) {
+            used.add(this.normPhrase(text));
+            post.comments.push({ author: c.id, text });
+            if (typeof UI !== "undefined" && UI.playerId) {
+              // оновити стрічку, якщо відкрита
+              try { UI.renderFeed(document.getElementById("search-posts")?.value || ""); } catch (_) {}
+            }
+          }
+        }
+      }, 800 + i * (1200 + Math.random() * 2000));
     });
   }
 
@@ -379,47 +566,198 @@ class BotEngine {
   getQuickReplies(fromId, toId) {
     const speaker = this.getCharacter(fromId);
     const gender = speaker?.gender || "f";
-    const pairKey = [fromId, toId].sort().join("_");
-    const special = SPECIAL_DIALOGS[`${fromId}_${toId}`] || SPECIAL_DIALOGS[pairKey];
-    const rel = this.getRelation(fromId, toId);
-    const mood = this.state[fromId]?.mood || "спокійний";
-    const pool = QUICK_MESSAGES[rel] || QUICK_MESSAGES.neutral;
-    let list = [...(pool[mood] || pool.default || ["Привіт"])];
-    if (special && Math.random() > 0.4) {
-      list = [...special.slice(0, 3), ...list].slice(0, 6);
-    }
     const target = this.getCharacter(toId);
-    if (target && Math.random() > 0.5) {
-      const interest = target.interests[Math.floor(Math.random() * target.interests.length)];
-      list.push(`Як там з «${interest}»?`);
+    const rel = this.getRelation(fromId, toId);
+    const special = SPECIAL_DIALOGS[`${fromId}_${toId}`];
+
+    // Живі заготовки для гравця (не клони «як справи» у відповідь собі)
+    let list = [
+      "Привіт!",
+      "Що в тебе нового?",
+      "Давно не писали…",
+      "Можна питання?",
+      "Просто хотіла/хотів написати"
+    ];
+    if (rel === "close" || rel === "crush") {
+      list = [
+        "Привіт 💕",
+        "Як ти насправді?",
+        "Згадувала/згадував тебе",
+        "Є хвилинка?",
+        "Хочу поділитись чимось"
+      ];
     }
+    if (special) list = [...special.slice(0, 2), ...list];
+    if (target?.interests?.length) {
+      const interest = target.interests[Math.floor(Math.random() * target.interests.length)];
+      list.push(`До речі про «${interest}»…`);
+    }
+    list.push("Пішли кудись як буде час");
+    list.push("Ок, я просто тут");
     return [...new Set(list.map(t => this.genderize(t, gender)))].slice(0, 6);
   }
 
-  botMayReply(fromId, toId) {
-    // Офлайн — не читає і не відповідає
-    if (!this.state[toId]?.online) {
-      return { type: "offline" };
-    }
+  botMayReply(fromId, toId, userMessage = "") {
+    const st = this.state[toId];
+    if (!st?.online) return { type: "offline" };
+
     const rel = this.getRelation(toId, fromId);
     if (rel === "blocked") return null;
-    const mood = this.state[toId]?.mood;
+
+    const mood = st.mood;
     const gender = this.getCharacter(toId)?.gender || "f";
+    const busy = this.isBusyStatus(st.status) && st.activityUntil > Date.now();
+
     if (["закритий", "апатія", "злий"].includes(mood) && Math.random() < 0.55) return { type: "ignore" };
     if (rel === "annoyed" && Math.random() < 0.7) return { type: "ignore" };
-    if (Math.random() < 0.18) return { type: "read_only" };
-    if (Math.random() < 0.12) return { type: "typing_then_cancel" };
 
-    const delay = 1200 + Math.random() * 5500;
-    const special = SPECIAL_DIALOGS[`${toId}_${fromId}`];
-    let text;
-    if (special && Math.random() > 0.45) {
-      text = special[Math.floor(Math.random() * special.length)];
-    } else {
-      const replies = this.getQuickReplies(toId, fromId);
-      text = replies[Math.floor(Math.random() * replies.length)];
+    // Зайнятий (кіно, кафе…) — рідко відповідає, коротко
+    if (busy && Math.random() < 0.55) return { type: "ignore" };
+    if (busy && Math.random() < 0.35) return { type: "read_only" };
+
+    if (!busy && Math.random() < 0.12) return { type: "read_only" };
+    if (!busy && Math.random() < 0.08) return { type: "typing_then_cancel" };
+
+    const delay = busy
+      ? 4000 + Math.random() * 8000
+      : 1500 + Math.random() * 5000;
+
+    let text = this.craftReply(toId, fromId, userMessage, { busy, rel, mood, gender });
+    return { type: "reply", text, delay };
+  }
+
+  /** Людська відповідь за змістом повідомлення, без ехо-питань */
+  craftReply(toId, fromId, userMessage, ctx) {
+    const msg = (userMessage || "").toLowerCase().trim();
+    const st = this.state[toId];
+    const status = st?.status || "";
+    const left = this.activityRemainingLabel(toId);
+    const name = this.getCharacter(fromId)?.name?.split(" ")[0] || "";
+    const gender = ctx.gender || "f";
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    // Зайнятість
+    if (ctx.busy) {
+      if (/кіно/i.test(status)) {
+        return pick([
+          `Зараз у кіно, напишу як вийду${left ? " (" + left + ")" : ""} 🎬`,
+          "Тсс, сеанс іде. Потім відповім!",
+          "О, привіт. Я ще в залі, на зв'язку пізніше."
+        ]);
+      }
+      if (/кафе/i.test(status)) {
+        return pick([
+          "Сиджу з друзями в кафе, напишу трохи згодом ☕",
+          "Зараз компанія, не можу нормально відповісти. Пізніше!",
+          `У кафе${left ? ", " + left : ""}. Не зникну.`
+        ]);
+      }
+      if (/побаченн/i.test(status)) {
+        return pick(["Зараз трохи зайнятий/зайнята, напиши пізніше", "Не зручно балакати. Потім!"]);
+      }
+      if (/сплю|душ|ванн/i.test(status)) {
+        return pick(["Зараз не можу", "Напишу як звільнюсь"]);
+      }
+      return pick([
+        `Зараз «${status}», відповім пізніше`,
+        "Трішки зайнятий/зайнята. Не ігнорую навмисно."
+      ]);
     }
-    return { type: "reply", text: this.genderize(text, gender), delay };
+
+    // Вітання
+    if (/^(привіт|привітик|хай|хел+о|здоров|вітаю|йо)\b/.test(msg) || msg.length < 12 && /привіт|хай/.test(msg)) {
+      return pick([
+        `Привіт${name ? ", " + name : ""} 😊`,
+        "О, привіт! Як ти?",
+        "Привітики. Що новенького?",
+        "Хей. Рада/рад бачити тебе онлайн."
+      ]);
+    }
+
+    // «Як справи?» — НЕ повторювати те саме питання
+    if (/як справи|як ти\b|як життя|що робиш|що робиш\?|як воно|шо робиш/.test(msg)) {
+      const byStatus = [
+        status ? `Та нормально. Зараз ${status}.` : "Нормально, потихеньку.",
+        status ? `Ага, я ${status}. А ти?` : "По-різному. У тебе як?",
+        "Більш-менш. День звичайний.",
+        mood === "сумний" || mood === "сумна" ? "Якщо чесно — не дуже. Але терпимо." : "Добре, дякую що питаєш.",
+        mood === "веселий" || mood === "весела" ? "Супер! Настрій топ." : "Спокійно. Без сюрпризів."
+      ];
+      return pick(byStatus);
+    }
+
+    // Запрошення / плани
+    if (/пішли|давай|кіно|кафе|зустрі|побачен|кооп|погра/.test(msg)) {
+      if (ctx.rel === "annoyed") return pick(["Ні.", "Не хочу.", "Без мене."]);
+      if (/кіно/.test(msg)) return pick(["Можу кіно, якщо час зійдеться 🎬", "О, кіно — так. Коли?", "Давай, тільки не жахастик 😅"]);
+      if (/кафе/.test(msg)) return pick(["Кафе завжди добре.", "Є ідея місця?", "Можу після роботи."]);
+      if (/погра|кооп|ігр/.test(msg)) return pick(["Можу в кооп вечором.", "Давай, скинь що за гра.", "Я за, якщо не вночі дуже."]);
+      return pick(["Можна спробувати.", "Напиши коли ти вільна/вільний.", "Звучить непогано."]);
+    }
+
+    // Емоційна підтримка
+    if (/сумн|поган|важк|самот|не можу|втоми/.test(msg)) {
+      return pick([
+        "Чую тебе. Якщо треба виговоритись — я тут.",
+        "Ох… тримайся. Можеш написати детальніше.",
+        "Шкода, що так. Не тримай у собі."
+      ]);
+    }
+
+    // Комплімент / тепло
+    if (/подобаєш|краси|люблю|сумую|справжн/.test(msg)) {
+      if (ctx.rel === "crush" || ctx.rel === "close") {
+        return pick(["Ого… дякую. Мені приємно 💗", "Ти теж багато значтиш для мене.", "Щоки горять, серйозно."]);
+      }
+      return pick(["Ой, несподівано 😳", "Дякую… це мило.", "Не знаю що сказати, але дякую."]);
+    }
+
+    // Питання про інтереси персонажа
+    const me = this.getCharacter(toId);
+    if (me?.interests?.some(i => msg.includes(i.toLowerCase()))) {
+      return pick([
+        "О, ти про це згадав/згадала — люблю цю тему.",
+        "Так! Можу довго про це говорити 😄",
+        "Угадала/угадав мій інтерес."
+      ]);
+    }
+
+    // Спецдіалоги — лише іноді і якщо не ехо
+    const special = SPECIAL_DIALOGS[`${toId}_${fromId}`];
+    if (special && Math.random() > 0.55) {
+      const s = pick(special);
+      if (!this.isEchoReply(s, msg)) return this.genderize(s, gender);
+    }
+
+    // Нейтральні живі відповіді (не питання-клони)
+    const neutral = [
+      "Ага, зрозуміла/зрозумів.",
+      "Цікаво. Розказуй далі.",
+      "Хм, не подумала/не подумав про це.",
+      "Ок, я з тобою.",
+      "Можна і так.",
+      status ? `До речі, я зараз ${status}.` : "Просто онлайн, нічого особливого.",
+      "Ха, добрий момент.",
+      "Добре. Напиши ще, якщо що."
+    ];
+    let text = pick(neutral);
+    // Анти-ехо: якщо раптом схоже на питання користувача — заміна
+    if (this.isEchoReply(text, msg)) {
+      text = pick(["Ага.", "Зрозуміла/зрозумів тебе.", "Ок 👍", "Я тут."]);
+    }
+    return this.genderize(text, gender);
+  }
+
+  isEchoReply(reply, userMsg) {
+    const r = (reply || "").toLowerCase().replace(/[?!…]+/g, "").trim();
+    const u = (userMsg || "").toLowerCase().replace(/[?!…]+/g, "").trim();
+    if (!r || !u) return false;
+    if (r === u) return true;
+    // Однакові короткі питання типу «як справи»
+    const q = /^(як справи|як ти|що робиш|привіт)$/;
+    if (q.test(r) && q.test(u)) return true;
+    if (u.length > 4 && r.includes(u)) return true;
+    return false;
   }
 
   onPlayerMessage(fromId, toId) {
@@ -560,22 +898,40 @@ class BotEngine {
 
   scheduleTicks() {
     const tick = () => {
+      const now = Date.now();
       CHARACTERS.forEach(c => {
-        if (Math.random() > 0.72) {
-          const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
-          this.state[c.id].mood = newMood;
-          this.state[c.id].thought = this.pickThought(newMood, c.gender);
+        const st = this.state[c.id];
+        // Поки активність іде — статус НЕ змінюємо (кіно = 1.5–2.5 год реально)
+        if (st.activityUntil && st.activityUntil > now) {
+          // настрій під час зайнятості змінюється дуже рідко (~5%)
+          if (Math.random() > 0.95) {
+            st.thought = this.pickThought(st.mood, c.gender);
+          }
+          return;
         }
-        if (Math.random() > 0.8) this.state[c.id].status = this.pickStatus(c);
-        if (Math.random() > 0.85) this.state[c.id].online = this.shouldBeOnline(c);
+        // Час вийшов — нова активність (майже завжди)
+        if (Math.random() > 0.2) {
+          const act = this.pickActivity(c);
+          st.status = act.status;
+          st.activityUntil = act.until;
+          st.activityKind = act.kind;
+          st.online = this.shouldBeOnline(c, act);
+        }
+        // Настрій міняється рідше, ніж раніше
+        if (Math.random() > 0.82) {
+          const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
+          st.mood = newMood;
+          st.thought = this.pickThought(newMood, c.gender);
+        }
+        if (Math.random() > 0.9) st.online = this.shouldBeOnline(c);
       });
-      if (Math.random() > 0.7) this.maybeGossip();
-      if (Math.random() > 0.85 && this.state["sayuri"]?.online) this.maybeSayuriDerekDrama();
-      // Боти іноді самі починають ігри
-      if (Math.random() > 0.92) this.botsStartGame();
-      setTimeout(tick, 22000 + Math.random() * 18000);
+      if (Math.random() > 0.78) this.maybeGossip();
+      if (Math.random() > 0.9 && this.state["sayuri"]?.online) this.maybeSayuriDerekDrama();
+      if (Math.random() > 0.94) this.botsStartGame();
+      // Тік раз на ~45–75 с — менше навантаження й стрибків
+      setTimeout(tick, 45000 + Math.random() * 30000);
     };
-    setTimeout(tick, 12000);
+    setTimeout(tick, 15000);
   }
 
   botsStartGame() {

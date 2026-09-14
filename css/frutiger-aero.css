@@ -1,0 +1,257 @@
+/* ============================================
+   Frutiger Aero — базові змінні та ефекти
+   Глянцеві градієнти, скло, природа, м'які тіні
+   Мінімальне використання пам'яті: без важких
+   зображень, тільки CSS-градієнти та rgba
+   ============================================ */
+
+:root {
+  /* Основна палітра Frutiger Aero */
+  --sky-top: #a8d8f0;
+  --sky-mid: #7ec8e3;
+  --sky-bot: #5bb5d4;
+  --grass: #8fbc8f;
+  --leaf: #6b9b6b;
+  --water: #4a90a4;
+  --glass: rgba(255, 255, 255, 0.55);
+  --glass-strong: rgba(255, 255, 255, 0.75);
+  --glass-dark: rgba(255, 255, 255, 0.25);
+  --border-glass: rgba(255, 255, 255, 0.65);
+  --text-dark: #1a3a4a;
+  --text-muted: #3d5a6a;
+  --accent: #2e8bc0;
+  --accent-soft: #5dade2;
+  --pink-glow: #f8a5c2;
+  --green-glow: #82e0aa;
+  --shadow: 0 8px 32px rgba(30, 90, 120, 0.18);
+  --shadow-soft: 0 4px 16px rgba(30, 90, 120, 0.12);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  color: var(--text-dark);
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-bot) 100%);
+  background-attachment: fixed;
+  overflow: hidden;
+}
+
+/* Скляні панелі */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+}
+
+.glass-strong {
+  background: var(--glass-strong);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Кнопки в стилі Aero */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e8f4fc 0%, #b8d9f0 100%);
+  border: 1px solid rgba(255,255,255,0.8);
+  box-shadow: 0 2px 8px rgba(30,90,120,0.15), inset 0 1px 0 rgba(255,255,255,0.7);
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+.btn:hover {
+  background: linear-gradient(180deg, #f0f8ff 0%, #c5e3f5 100%);
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, #fce8e8 0%, #f0b8b8 100%);
+  color: #8b2e2e;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(180deg, #fff0f0 0%, #f5c5c5 100%);
+}
+
+/* Аватари — кружечки з глянцем */
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #cce5f5, #8ab8d0);
+  border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 4px 12px rgba(30,90,120,0.2), inset 0 -2px 6px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
+  border-radius: 50% 50% 0 0;
+}
+
+.avatar.online::before {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: #2ecc71;
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.avatar.lg {
+  width: 80px;
+  height: 80px;
+  font-size: 2.2rem;
+}
+
+.avatar.sm {
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+}
+
+/* Статуси */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.8);
+  color: var(--text-muted);
+}
+
+/* Типінг-індикатор */
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.typing-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* Скролбар у стилі Aero */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.5);
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.7);
+}
+
+/* ============================================
+   Теми за настроєм (легкі CSS-змінні)
+   ============================================ */
+body.theme-pink {
+  --sky-top: #f8d0e0; --sky-mid: #f0a8c8; --sky-bot: #e890b0;
+  --glass: rgba(255, 230, 240, 0.6); --accent: #d46a9a; --text-dark: #4a2035;
+}
+body.theme-green {
+  --sky-top: #c8e8d0; --sky-mid: #90d0a0; --sky-bot: #70b880;
+  --glass: rgba(230, 255, 240, 0.55); --accent: #2e8b57; --text-dark: #1a3a28;
+}
+body.theme-silver {
+  --sky-top: #d8e0e8; --sky-mid: #b0c0d0; --sky-bot: #90a0b0;
+  --glass: rgba(240, 245, 250, 0.6); --accent: #5a7a9a; --text-dark: #2a3a4a;
+}
+body.theme-blue {
+  --sky-top: #a0c8e8; --sky-mid: #70a0d0; --sky-bot: #5080b0;
+  --glass: rgba(200, 220, 240, 0.55); --accent: #3a6a9a; --text-dark: #1a2a4a;
+}
+body.theme-cyan {
+  --sky-top: #b0e8f0; --sky-mid: #70d0e0; --sky-bot: #40b0c8;
+  --glass: rgba(220, 245, 250, 0.55); --accent: #2a9ab0; --text-dark: #1a3a45;
+}
+body.theme-red {
+  --sky-top: #f0c0c0; --sky-mid: #e09090; --sky-bot: #c07070;
+  --glass: rgba(255, 230, 230, 0.55); --accent: #c04040; --text-dark: #4a1a1a;
+}
+body.theme-yellow {
+  --sky-top: #f8e8b0; --sky-mid: #f0d070; --sky-bot: #e0b040;
+  --glass: rgba(255, 250, 220, 0.6); --accent: #c09020; --text-dark: #4a3a10;
+}
+body.theme-black {
+  --sky-top: #3a3a4a; --sky-mid: #2a2a35; --sky-bot: #1a1a22;
+  --glass: rgba(40, 40, 50, 0.7); --glass-strong: rgba(50, 50, 60, 0.8);
+  --border-glass: rgba(80, 80, 100, 0.5); --accent: #8090a0;
+  --text-dark: #d0d0e0; --text-muted: #9090a0;
+}
+body.theme-purple {
+  --sky-top: #d0c0e0; --sky-mid: #a090c0; --sky-bot: #8070a0;
+  --glass: rgba(230, 220, 245, 0.55); --accent: #7a5a9a; --text-dark: #2a1a3a;
+}
+body.theme-orange {
+  --sky-top: #f8d8b0; --sky-mid: #f0b070; --sky-bot: #e09040;
+  --glass: rgba(255, 240, 220, 0.6); --accent: #d07020; --text-dark: #4a2a10;
+}
+
+body {
+  transition: background 0.6s ease;
+}

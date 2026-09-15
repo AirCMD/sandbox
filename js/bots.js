@@ -130,6 +130,8 @@ class BotEngine {
       this.blocked[c.id] = new Set();
     });
 
+    this.initRelationships();
+
     SAMPLE_POSTS.forEach((p, i) => {
       this.posts.push({
         id: "p" + i,
@@ -236,6 +238,171 @@ class BotEngine {
       return `ще ~${h} год${m ? " " + m + " хв" : ""}`;
     }
     return `ще ~${Math.max(1, Math.round(minLeft))} хв`;
+  }
+
+  /* ========== СТОСУНКИ ========== */
+  initRelationships() {
+    const now = Date.now();
+    CHARACTERS.forEach(c => {
+      const st = this.state[c.id];
+      st.relChangePolicy = RELATIONSHIP_CHANGE_POLICIES[Math.floor(Math.random() * RELATIONSHIP_CHANGE_POLICIES.length)];
+      st.relationship = {
+        type: "single",
+        partnerId: null,
+        mutual: true,
+        hidden: false,
+        lastChange: now - Math.random() * 7 * 86400000
+      };
+    });
+    // Сюжетні заготовки (не завжди взаємні)
+    this._setRel("sayuri", "dating", "derek", false); // вона в статусі, він не підтвердив
+    this._setRel("akira", "dating", "yani", false);
+    this._setRel("kent", "dating", "kate", Math.random() > 0.5);
+    if (this.state.kent.relationship.mutual) {
+      this._setRel("kate", "dating", "kent", true);
+    }
+    this._setRel("derek", "complicated", "kate", false);
+    // хтось приховує
+    if (Math.random() > 0.5) {
+      this.state.jura.relationship.hidden = true;
+      this.state.jura.relationship.type = "dating";
+      this.state.jura.relationship.partnerId = "giki";
+      this.state.jura.relationship.mutual = false;
+    }
+  }
+
+  _setRel(id, type, partnerId, mutual) {
+    const st = this.state[id];
+    if (!st) return;
+    st.relationship = {
+      type,
+      partnerId,
+      mutual: !!mutual,
+      hidden: false,
+      lastChange: Date.now() - Math.random() * 3 * 86400000
+    };
+  }
+
+  relationshipLabel(id) {
+    const st = this.state[id];
+    const c = this.getCharacter(id);
+    if (!st?.relationship) return c?.gender === "m" ? "Неодружений" : "Неодружена";
+    const r = st.relationship;
+    if (r.hidden) {
+      return c?.gender === "m" ? "Стосунки приховано" : "Стосунки приховано";
+    }
+    const def = RELATIONSHIP_TYPES[r.type] || RELATIONSHIP_TYPES.single;
+    const base = c?.gender === "m" ? def.labelM : def.labelF;
+    if (!def.needsPartner || !r.partnerId) return base;
+    if (!r.mutual) {
+      // є статус, але без імені партнера
+      return base + " (деталі приховано)";
+    }
+    const p = this.getCharacter(r.partnerId);
+    return base + (p ? " з " + p.name : "");
+  }
+
+  canChooseType(charId, typeId) {
+    const def = RELATIONSHIP_TYPES[typeId];
+    if (!def) return false;
+    if (def.neverChooser && def.neverChooser.includes(charId)) return false;
+    if (def.chooserPool && !def.chooserPool.includes(charId)) return false;
+    return true;
+  }
+
+  partnerCandidates(charId, typeId) {
+    const def = RELATIONSHIP_TYPES[typeId];
+    let pool = CHARACTERS.map(c => c.id).filter(id => id !== charId);
+    if (def?.partnerPool) pool = pool.filter(id => def.partnerPool.includes(id));
+    return pool;
+  }
+
+  policyMs(policy) {
+    if (policy === "day") return 86400000;
+    if (policy === "week") return 7 * 86400000;
+    if (policy === "month") return 30 * 86400000;
+    return Infinity; // never
+  }
+
+  maybeChangeRelationship(charId) {
+    const st = this.state[charId];
+    if (!st?.relationship) return;
+    const policy = st.relChangePolicy || "week";
+    if (policy === "never") return;
+    const elapsed = Date.now() - (st.relationship.lastChange || 0);
+    if (elapsed < this.policyMs(policy)) return;
+    if (Math.random() > 0.4) return; // не завжди хочуть міняти навіть коли можна
+
+    const types = Object.keys(RELATIONSHIP_TYPES).filter(t => this.canChooseType(charId, t));
+    if (!types.length) return;
+    const type = types[Math.floor(Math.random() * types.length)];
+    const def = RELATIONSHIP_TYPES[type];
+    let partnerId = null;
+    let mutual = true;
+    let hidden = type === "hidden" || Math.random() > 0.85;
+
+    if (def.needsPartner && type !== "hidden") {
+      const cands = this.partnerCandidates(charId, type);
+      if (!cands.length) return;
+      partnerId = cands[Math.floor(Math.random() * cands.length)];
+      if (def.needsMutual) {
+        // згода партнера ~55%
+        mutual = Math.random() > 0.45;
+        if (mutual) {
+          // синхронізувати партнера
+          const pst = this.state[partnerId];
+          if (pst) {
+            pst.relationship = {
+              type,
+              partnerId: charId,
+              mutual: true,
+              hidden: false,
+              lastChange: Date.now()
+            };
+          }
+        }
+      } else {
+        mutual = Math.random() > 0.3;
+      }
+    }
+
+    const prev = { ...st.relationship };
+    st.relationship = { type, partnerId, mutual, hidden, lastChange: Date.now() };
+    this.reactToRelationshipChange(charId, prev, st.relationship);
+  }
+
+  reactToRelationshipChange(charId, prev, next) {
+    const who = this.getCharacter(charId);
+    if (!who) return;
+    // емоційна реакція «заборонених» на співмешкання інших — вже через neverChooser
+    if (next.type === "open" && charId === "derek" && this.state.sayuri) {
+      this.state.sayuri.mood = "сумний";
+      this.state.sayuri.thought = "Знову цей вільний дурдім… серце стискається";
+    }
+    if (next.type === "cohabiting" && ["giki", "yani", "akira", "sayuri"].includes(charId)) {
+      // не повинно статись через canChooseType
+      return;
+    }
+    // реакції інших у стрічці / плітках
+    const label = this.relationshipLabel(charId);
+    if (Math.random() > 0.5) {
+      const gossiper = ["jini", "cornel"].find(id => this.state[id]?.online) || "jini";
+      this.addPost(gossiper, this.genderize(
+        `Чутки: @${charId} тепер «${label}». Цікаво, це надовго?`,
+        this.getCharacter(gossiper)?.gender || "f"
+      ));
+    }
+    // розчарування якщо обрали «несерйозний» статус біля sayuri
+    if (next.type === "open" && next.partnerId) {
+      const other = this.getCharacter(next.partnerId);
+      // sayuri сумує якщо derek
+      if (charId === "derek" || next.partnerId === "derek") {
+        if (this.state.sayuri) {
+          this.state.sayuri.mood = Math.random() > 0.5 ? "сумний" : "роздратований";
+          this.state.sayuri.thought = "Чому завжди так…";
+        }
+      }
+    }
   }
 
   pickThought(mood, gender = "f") {
@@ -1138,12 +1305,23 @@ class BotEngine {
       if (Math.random() > 0.78) this.maybeGossip();
       if (Math.random() > 0.9 && this.state["sayuri"]?.online) this.maybeSayuriDerekDrama();
       if (Math.random() > 0.94) this.botsStartGame();
+      // рідка спроба змінити стосунки
+      if (Math.random() > 0.88) {
+        const cand = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+        this.maybeChangeRelationship(cand.id);
+      }
 
-      // Тема сторінки залежить від настрою Яні
-      if (playerMoodChanged && typeof UI !== "undefined") {
+      // Тема / профіль: оновлення UI
+      if (typeof UI !== "undefined" && UI.playerId) {
         try {
-          UI.applyTheme();
-          UI.renderMePanel();
+          if (playerMoodChanged) {
+            UI.applyTheme(UI.viewingProfileId || UI.playerId);
+            UI.renderMePanel();
+          }
+          // live статус на відкритому профілі бота
+          if (UI.viewingProfileId && document.getElementById("view-bot-profile")?.classList.contains("active")) {
+            UI.refreshBotProfileStatus?.(UI.viewingProfileId);
+          }
         } catch (_) {}
       }
 

@@ -107,6 +107,7 @@ const CHARACTERS = [
     name: "Яні Куронеко",
     gender: "f",
     emoji: "🐱",
+    avatar: "", // URL: "https://..."
     color: "#e8a0bf",
     bio: "Релакс-музика, медитація, кіно про мультивсесвіт, мітика, тамагочі й канцелярія. Працює в аніме-магазині.",
     interests: ["релакс-музика", "медитація", "мультивсесвіт", "мітика", "тамагочі", "блокноти", "мультиручки", "стікери"],
@@ -123,6 +124,7 @@ const CHARACTERS = [
     name: "Джині Мацумацу",
     gender: "f",
     emoji: "🐰",
+    avatar: "", // URL: "https://..."
     color: "#f5c542",
     bio: "Менеджерка магазину електронних іграшок. Жартує, колекціонує пакети з-під снеків, знає всі плітки.",
     interests: ["жарти", "сніки", "плітки", "іграшки", "кіно", "ігри"],
@@ -139,6 +141,7 @@ const CHARACTERS = [
     name: "Саюрі Кіт",
     gender: "f",
     emoji: "🎤",
+    avatar: "", // URL: "https://..."
     color: "#c39bd3",
     bio: "Закохана в Дерека К'ю. Співає, створює іграшки. Часто сумує, але живе у фантазіях, що почуття взаємні.",
     interests: ["спів", "іграшки", "мрії", "романтика", "рукоділля"],
@@ -155,6 +158,7 @@ const CHARACTERS = [
     name: "Кейт Чан",
     gender: "f",
     emoji: "🐴",
+    avatar: "", // URL: "https://..."
     color: "#58d68d",
     bio: "Соціально активна. Кінний спорт, постійні подорожі. Відкрита, але вибіркова у близьких стосунках.",
     interests: ["кінний спорт", "подорожі", "фото", "активний відпочинок"],
@@ -171,6 +175,7 @@ const CHARACTERS = [
     name: "Гікі Коморі",
     gender: "f",
     emoji: "🌙",
+    avatar: "", // URL: "https://..."
     color: "#5dade2",
     bio: "Сидить вночі в інтернеті. Скромна, дуже розумна. Програми, відеоігри, малювання. Інколи глибоко сумує.",
     interests: ["програмування", "відеоігри", "малювання", "ніч", "тиша"],
@@ -187,6 +192,7 @@ const CHARACTERS = [
     name: "Акіра Бакенеко",
     gender: "m",
     emoji: "🎮",
+    avatar: "", // URL: "https://..."
     color: "#e74c3c",
     bio: "Продавець-консультант у «Техсмітнику». Відеоігри, фастфуд, стрімери. Має 5 улюблених стрімерів.",
     interests: ["відеоігри", "фастфуд", "стріми", "техніка", "меми"],
@@ -203,6 +209,7 @@ const CHARACTERS = [
     name: "Корнел Вус",
     gender: "m",
     emoji: "📦",
+    avatar: "", // URL: "https://..."
     color: "#af7ac5",
     bio: "Продає речі з барахолки. Мріє про бізнес. Хитрий, але хитрість часто виходить боком. Любить плітки.",
     interests: ["продажі", "барахолка", "плітки", "гроші", "схеми"],
@@ -219,6 +226,7 @@ const CHARACTERS = [
     name: "Дерек К'ю",
     gender: "m",
     emoji: "😤",
+    avatar: "", // URL: "https://..."
     color: "#ec7063",
     bio: "Емоційно нестабільний. Вважає, що дівчата його не розуміють. Подобається Кейт, яка ставиться байдуже. Саюрі його бісить.",
     interests: ["музика", "самотність", "скарги", "нічні роздуми"],
@@ -235,6 +243,7 @@ const CHARACTERS = [
     name: "Кент Уайт",
     gender: "m",
     emoji: "🏃",
+    avatar: "", // URL: "https://..."
     color: "#58d68d",
     bio: "Спорт, біг. Має багато спільного з Кейт Чан. Прямий, дисциплінований.",
     interests: ["біг", "спорт", "здоров'я", "ранкові тренування"],
@@ -251,6 +260,7 @@ const CHARACTERS = [
     name: "Джура Кун",
     gender: "m",
     emoji: "🎌",
+    avatar: "", // URL: "https://..."
     color: "#bb8fce",
     bio: "Сидить вночі в інтернеті. Аніме, лолі-тематика, колекціонує дакімакури. Трохи дивний, але тихий.",
     interests: ["аніме", "дакімакури", "нічні форуми", "колекціонування"],
@@ -431,6 +441,82 @@ const SPECIAL_DIALOGS = {
     "Стрім не мій світ, але код — так"
   ]
 };
+
+
+
+/* ---- Стосунки ---- */
+const RELATIONSHIP_TYPES = {
+  single: {
+    id: "single",
+    labelF: "Неодружена",
+    labelM: "Неодружений",
+    needsPartner: false,
+    needsMutual: false
+  },
+  dating: {
+    id: "dating",
+    labelF: "У стосунках",
+    labelM: "У стосунках",
+    needsPartner: true,
+    needsMutual: true,
+    // може з будь-ким
+    partnerPool: null
+  },
+  married: {
+    id: "married",
+    labelF: "Одружена",
+    labelM: "Одружений",
+    needsPartner: true,
+    needsMutual: true,
+    partnerPool: null
+  },
+  cohabiting: {
+    id: "cohabiting",
+    labelF: "У співмешканні",
+    labelM: "У співмешканні",
+    needsPartner: true,
+    needsMutual: true,
+    partnerPool: ["jura", "derek", "kent", "cornel", "jini", "kate"],
+    // хто сам ніколи не обере цей статус
+    neverChooser: ["giki", "yani", "akira", "sayuri"]
+  },
+  open: {
+    id: "open",
+    labelF: "У вільному дурдомі",
+    labelM: "У вільному дурдомі",
+    needsPartner: true,
+    needsMutual: false,
+    // хто може обрати такий статус
+    chooserPool: ["derek", "jura"],
+    partnerPool: null
+  },
+  complicated: {
+    id: "complicated",
+    labelF: "Складні стосунки",
+    labelM: "Складні стосунки",
+    needsPartner: true,
+    needsMutual: false,
+    partnerPool: null
+  },
+  separated: {
+    id: "separated",
+    labelF: "Живемо окремо",
+    labelM: "Живемо окремо",
+    needsPartner: true,
+    needsMutual: true,
+    chooserPool: ["derek", "kent", "akira", "kate"],
+    partnerPool: null
+  },
+  hidden: {
+    id: "hidden",
+    labelF: "Стосунки приховано",
+    labelM: "Стосунки приховано",
+    needsPartner: false,
+    needsMutual: false
+  }
+};
+
+const RELATIONSHIP_CHANGE_POLICIES = ["day", "week", "month", "never"];
 
 const SAMPLE_POSTS = [
   { author: "yani", text: "Новий блокнот і пачка стікерів. Щастя існує. ✨", likes: ["jini", "akira", "giki"] },

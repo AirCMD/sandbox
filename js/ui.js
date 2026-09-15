@@ -16,7 +16,7 @@ const UI = {
       const card = document.createElement("div");
       card.className = "char-card";
       card.innerHTML = `
-        <div class="avatar lg" style="background:linear-gradient(145deg,${c.color}88,${c.color})">${c.emoji}</div>
+        ${this.avatarHTML(c, "lg", "", `background:linear-gradient(145deg,${c.color}88,${c.color})`)}
         <div class="name">${c.name}</div>
         <div class="gender">${c.gender === "m" ? "хлопець" : "дівчина"} · ${c.isOwl ? "сова" : "жайворонок"}</div>
       `;
@@ -31,6 +31,20 @@ const UI = {
       grid.appendChild(card);
     });
     modal.hidden = false;
+  },
+
+
+  /** Аватар: картинка з URL або емодзі */
+  avatarHTML(char, sizeClass = "", extraClass = "", styleExtra = "") {
+    if (!char) return `<div class="avatar ${sizeClass} ${extraClass}">?</div>`;
+    const cls = `avatar aero-avatar ${sizeClass} ${extraClass}`.trim();
+    const bg = styleExtra || `background:linear-gradient(160deg,${char.color || "#88a"}aa,${char.color || "#88a"})`;
+    const url = (char.avatar || "").trim();
+    if (url && /^https?:\/\//i.test(url)) {
+      const fb = this.escape(char.emoji || "?");
+      return `<div class="${cls} has-img" style="${bg}" data-fallback="${fb}"><img class="avatar-img" src="${this.escape(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove();if(this.parentNode)this.parentNode.textContent=this.parentNode.dataset.fallback||'?'"/></div>`;
+    }
+    return `<div class="${cls}" style="${bg}">${char.emoji || "?"}</div>`;
   },
 
   applyTheme(themeForId = null) {
@@ -58,7 +72,7 @@ const UI = {
     const s = engine.getState(this.playerId);
     const online = s.online ? '<div class="status-online">онлайн</div>' : '<div class="status-online" style="color:#ffb0b0">офлайн</div>';
     document.getElementById("me-panel").innerHTML = `
-      <div class="avatar lg aero-avatar me-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}cc,${c.color})">${c.emoji}</div>
+      ${this.avatarHTML(c, "lg me-avatar", s.online ? "online" : "", `background:linear-gradient(160deg,${c.color}cc,${c.color})`)}
       ${online}
       <div class="mood">${engine.moodLabel(s.mood, c.gender)}</div>
     `;
@@ -94,7 +108,7 @@ const UI = {
       preview.innerHTML = two.map(c => {
         const on = engine.getState(c.id)?.online;
         return `<div class="friend-preview-item" data-id="${c.id}">
-          <div class="avatar sm aero-avatar ${on ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}aa,${c.color})">${c.emoji}</div>
+          ${this.avatarHTML(c, "sm", on ? "online" : "")}
           <span class="friend-preview-name">${c.name.split(" ")[0]}</span>
         </div>`;
       }).join("") || `<span style="font-size:0.75rem;opacity:0.8">Немає друзів</span>`;
@@ -108,7 +122,7 @@ const UI = {
     onlineFirst.forEach(c => {
       const st = engine.getState(c.id);
       const li = document.createElement("li");
-      li.innerHTML = `<div class="avatar sm aero-avatar ${st.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}aa,${c.color})">${c.emoji}</div><span>${c.name.split(" ")[0]}${st.online ? "" : " · офлайн"}</span>`;
+      li.innerHTML = `${this.avatarHTML(c, "sm", st.online ? "online" : "")}<span>${c.name.split(" ")[0]}${st.online ? "" : " · офлайн"}</span>`;
       li.onclick = () => this.openBotProfile(c.id);
       ul.appendChild(li);
     });
@@ -147,13 +161,13 @@ const UI = {
     const comments = (post.comments || []).map(cm => {
       const ca = engine.getCharacter(cm.author);
       return `<div class="comment">
-        <div class="avatar sm aero-avatar">${ca?.emoji || "?"}</div>
+        ${this.avatarHTML(ca, "sm")}
         <div class="text"><span class="author" data-id="${cm.author}">${ca?.name || ""}</span> ${this.formatText(cm.text)}</div>
       </div>`;
     }).join("");
     return `
       <div class="post-header">
-        <div class="avatar aero-avatar ${engine.getState(post.author)?.online ? "online" : ""}" style="background:linear-gradient(145deg,${author.color}88,${author.color})">${author.emoji}</div>
+        ${this.avatarHTML(author, "", engine.getState(post.author)?.online ? "online" : "", `background:linear-gradient(145deg,${author.color}88,${author.color})`)}
         <div class="meta">
           <div class="author" data-id="${post.author}">${author.name}</div>
           <div class="time">${post.weirdTime || ""}</div>
@@ -223,8 +237,10 @@ const UI = {
       <div class="profile-info" style="width:100%">
         <h1 class="display-name">${c.name}</h1>
         <div class="status-online">${s.online ? "онлайн" : "офлайн"}</div>
-        <p class="info-line"><b>Статус:</b> ${engine.moodLabel(s.mood, c.gender)}, ${s.status}${engine.activityRemainingLabel(this.playerId) ? " (" + engine.activityRemainingLabel(this.playerId) + ")" : ""}.</p>
+        <p class="info-line"><b>Зараз:</b> ${s.status}${engine.activityRemainingLabel(this.playerId) ? " (" + engine.activityRemainingLabel(this.playerId) + ")" : ""}</p>
+        <p class="info-line"><b>Настрій:</b> ${engine.moodLabel(s.mood, c.gender)}</p>
         <p class="info-line"><b>Думки:</b> ${s.thought}</p>
+        <p class="info-line"><b>Стосунки:</b> ${engine.relationshipLabel(this.playerId)}</p>
         <p class="info-line"><b>Дописів:</b> ${engine.posts.filter(p => p.author === this.playerId).length}
            · <b>Друзів:</b> ${s.friends.length}</p>
       </div>
@@ -277,7 +293,7 @@ const UI = {
           const f = engine.getCharacter(fid);
           const rel = engine.getRelation(this.playerId, fid);
           return `<div class="glass" style="padding:10px;display:flex;align-items:center;gap:10px;cursor:pointer" data-id="${fid}">
-            <div class="avatar ${engine.getState(fid).online ? "online" : ""}">${f.emoji}</div>
+            ${this.avatarHTML(f, "", engine.getState(fid).online ? "online" : "")}
             <div><strong>${f.name}</strong><br><span style="font-size:0.8rem;color:var(--text-muted)">${rel}</span></div>
           </div>`;
         }).join("") || "<p style='color:var(--text-muted)'>Поки порожньо</p>"}
@@ -325,6 +341,22 @@ const UI = {
     });
   },
 
+  refreshBotProfileStatus(id) {
+    const box = document.getElementById("bot-live-status");
+    if (!box || !id) return;
+    const c = engine.getCharacter(id);
+    const s = engine.getState(id);
+    if (!c || !s) return;
+    const set = (field, val) => {
+      const el = box.querySelector(`[data-field="${field}"]`);
+      if (el) el.textContent = val;
+    };
+    set("status", s.status + (engine.activityRemainingLabel(id) ? " (" + engine.activityRemainingLabel(id) + ")" : ""));
+    set("mood", engine.moodLabel(s.mood, c.gender));
+    set("thought", s.thought);
+    set("rel", engine.relationshipLabel(id));
+  },
+
   openBotProfile(id) {
     if (id === this.playerId) { this.switchView("profile"); return; }
     engine.track("profileVisited", 1, id);
@@ -337,7 +369,12 @@ const UI = {
           <h2 class="display-name">${c.name}</h2>
           <div class="status-online">${s.online ? "онлайн" : "офлайн"}</div>
           <div class="bio">${c.bio}</div>
-          <div class="status-pill" style="margin-top:8px">${s.status}${engine.activityRemainingLabel(id) ? " · " + engine.activityRemainingLabel(id) : ""} · ${engine.moodLabel(s.mood, c.gender)}</div>
+          <div class="bot-live-status" id="bot-live-status">
+            <p class="info-line"><b>Зараз:</b> <span data-field="status">${s.status}${engine.activityRemainingLabel(id) ? " (" + engine.activityRemainingLabel(id) + ")" : ""}</span></p>
+            <p class="info-line"><b>Настрій:</b> <span data-field="mood">${engine.moodLabel(s.mood, c.gender)}</span></p>
+            <p class="info-line"><b>Думки:</b> <span data-field="thought">${s.thought}</span></p>
+            <p class="info-line"><b>Стосунки:</b> <span data-field="rel">${engine.relationshipLabel(id)}</span></p>
+          </div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn" id="btn-message">Написати</button>
             <button class="btn" id="btn-toggle-friend">${["friend","close","crush"].includes(rel) ? "Видалити з друзів" : "Додати в друзі"}</button>
@@ -345,7 +382,7 @@ const UI = {
             <button class="btn-danger" id="btn-block-bot">Заблокувати</button>
           </div>
         </div>
-        <div class="avatar md aero-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(145deg,${c.color}88,${c.color})" data-id="${id}">${c.emoji}</div>
+        <div data-id="${id}">${this.avatarHTML(c, "md", s.online ? "online" : "", `background:linear-gradient(145deg,${c.color}88,${c.color})`)}</div>
       </div>
     `;
     const botPosts = engine.posts.filter(p => p.author === id).sort((a,b) => b.ts - a.ts);
@@ -422,7 +459,7 @@ const UI = {
     const options = engine.getGalleryCommentOptions(item);
     const commentsHtml = comments.map(cm => {
       const ca = engine.getCharacter(cm.author);
-      return `<div class="comment"><div class="avatar sm aero-avatar">${ca?.emoji || "?"}</div>
+      return `<div class="comment">${this.avatarHTML(ca, "sm")}
         <div class="text"><span class="author" data-id="${cm.author}">${ca?.name || ""}</span> ${this.formatText(cm.text)}</div></div>`;
     }).join("") || '<p class="no-comments">Коментарів ще немає</p>';
 
@@ -490,7 +527,7 @@ const UI = {
       const el = document.createElement("div");
       el.className = "msg-item glass";
       el.innerHTML = `
-        <div class="avatar ${st.online ? "online" : ""}">${c.emoji}</div>
+        ${this.avatarHTML(c, "", st.online ? "online" : "")}
         <div style="flex:1;min-width:0">
           <strong>${c.name}</strong>
           <div class="preview">${last ? last.text : "Немає повідомлень · " + rel}</div>
@@ -507,7 +544,7 @@ const UI = {
     const s = engine.getState(toId);
     document.getElementById("chat-user-info").innerHTML = `
       <div class="chat-user-link" data-id="${toId}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <div class="avatar sm aero-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}aa,${c.color})">${c.emoji}</div>
+        ${this.avatarHTML(c, "sm", s.online ? "online" : "")}
         <div><strong>${c.name}</strong><br><span style="font-size:0.8rem;opacity:0.9">${s.online ? (s.status + (engine.activityRemainingLabel(toId) ? " · " + engine.activityRemainingLabel(toId) : "")) : "не в мережі"}</span></div>
       </div>
     `;

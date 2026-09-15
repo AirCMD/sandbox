@@ -1626,3 +1626,59 @@ ul#online-friends:not(.collapsed),
   display: block;
   border-radius: inherit;
 }
+
+/* ---- Крафт ---- */
+#view-craft .craft-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+#view-craft .craft-toolbar .btn.active {
+  outline: 2px solid rgba(255,255,255,0.9);
+  filter: brightness(1.1);
+}
+.craft-hint, .craft-note {
+  font-size: 0.82rem;
+  opacity: 0.9;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+.craft-panel {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.craft-panel label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 8px 0 4px;
+}
+.craft-ta, .craft-input, .craft-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.35);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+.craft-ta { min-height: 100px; line-height: 1.4; }
+.craft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  position: sticky;
+  bottom: 8px;
+}
+.craft-react-item {
+  border-top: 1px solid rgba(255,255,255,0.25);
+  padding: 10px 0;
+  margin-top: 8px;
+}

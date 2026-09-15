@@ -93,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
   engine.state.yani.online = true;
   const selectModal = document.getElementById("character-select");
   if (selectModal) selectModal.hidden = true;
+  if (typeof ContentCraft !== "undefined") ContentCraft.init();
   UI.applyTheme();
   UI.refreshAll();
   initAeroPerf();

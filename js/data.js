@@ -107,7 +107,7 @@ const CHARACTERS = [
     name: "Яні Куронеко",
     gender: "f",
     emoji: "🐱",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgkPXEo9bsccA1-IIT-KUyEuAKqHDr_TqUk-nmd4oksI3rhDnHSdk6f5W33CTttxhY2F1iowhoRqtd-PumQD7mnkhODarmDRto8UmhRwQuGaEAgSmC26uPA7euxu72oZ0wYTV6ALPHLEULM94dQodtfoq9TC7kXm8Zen1OY2zuAUvcdWQxnXvrgNyQw9WE", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEg6TLuKwTa6G7t32SgZE9RiJp5vLqOOqtC7lBHiLXIjBZOZAx1Dku1fWM8x_bc1lXwA1pF32pojhJW02L1BxI3oJfuvwBhC6i9Di0zPVQhzLcGslTae08Qe-4bRNEtHajGweOmDs9Snij-8QDCseC7KCckbjuGosEilTW3y2LxVSfdQ0WRgCTtt8us3ahI",
     color: "#e8a0bf",
     bio: "Релакс-музика, медитація, кіно про мультивсесвіт, мітика, тамагочі й канцелярія. Працює в аніме-магазині.",
     interests: ["релакс-музика", "медитація", "мультивсесвіт", "мітика", "тамагочі", "блокноти", "мультиручки", "стікери"],
@@ -141,7 +141,7 @@ const CHARACTERS = [
     name: "Саюрі Кіт",
     gender: "f",
     emoji: "🎤",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEhZ86sfJyXVUZ5W_dGDHW9nTmM-ns3Nz0hzKDddBIT0nzTySpqHaX74g5T0ZROux6y_z1ih8pJlum0gttajbGmMI27KSwq6yl70vWpWzvrYcx_HF68U9Jo1B7tKRvoRxGODaP2kPxgPG8fj1TWrxkv3jqQi25w7TAx9BGQ_No6seVQSxKrufXybZ_d4s7k", // URL: "https://..."
+    avatar: "", // URL: "https://..."
     color: "#c39bd3",
     bio: "Закохана в Дерека К'ю. Співає, створює іграшки. Часто сумує, але живе у фантазіях, що почуття взаємні.",
     interests: ["спів", "іграшки", "мрії", "романтика", "рукоділля"],
@@ -158,7 +158,7 @@ const CHARACTERS = [
     name: "Кейт Чан",
     gender: "f",
     emoji: "🐴",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjRpkjrxbFQPsjAFMo2CtJ_jek6IutY9NkWSl0mMRpqRv9TUSW8EEgYaBcbsL0ApzDYQRj7rRyWRUZPGScps8s_2LpvyuugRC3YmMHLStj5qSU0EtYZa2LCVvag4JP-c0jVxQJJZ3syKFux0lWNlkrhKFJv-hQZ9m3vvHuOOQW0PB5-z0WeEoUMC-d1Hfg", // URL: "https://..."
+    avatar: "", // URL: "https://..."
     color: "#58d68d",
     bio: "Соціально активна. Кінний спорт, постійні подорожі. Відкрита, але вибіркова у близьких стосунках.",
     interests: ["кінний спорт", "подорожі", "фото", "активний відпочинок"],
@@ -191,8 +191,8 @@ const CHARACTERS = [
     id: "akira",
     name: "Акіра Бакенеко",
     gender: "m",
-    // emoji: "",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEg6TLuKwTa6G7t32SgZE9RiJp5vLqOOqtC7lBHiLXIjBZOZAx1Dku1fWM8x_bc1lXwA1pF32pojhJW02L1BxI3oJfuvwBhC6i9Di0zPVQhzLcGslTae08Qe-4bRNEtHajGweOmDs9Snij-8QDCseC7KCckbjuGosEilTW3y2LxVSfdQ0WRgCTtt8us3ahI", // URL: "https://...🎮"
+    emoji: "🎮",
+    avatar: "", // URL: "https://..."
     color: "#e74c3c",
     bio: "Продавець-консультант у «Техсмітнику». Відеоігри, фастфуд, стрімери. Має 5 улюблених стрімерів.",
     interests: ["відеоігри", "фастфуд", "стріми", "техніка", "меми"],
@@ -209,7 +209,7 @@ const CHARACTERS = [
     name: "Корнел Вус",
     gender: "m",
     emoji: "📦",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEiWYzjeUTFiYOn6la_I85bW21t8ce-aUt0RSS-D20N2sAi-R5__k0rkL51aECpvgUYS1nCg3bdFCbFawuVCtQW6HV4uRkxZJGxtbTzU_7lgq6iScgEnK-_ITRNmrevbnRptW-Rwo-G6HomYW4z_i0tOh3UA2MgZ_ADhKKtcczKJygPDAYwCmdj9ILDiBsQ", // URL: "https://..."
+    avatar: "", // URL: "https://..."
     color: "#af7ac5",
     bio: "Продає речі з барахолки. Мріє про бізнес. Хитрий, але хитрість часто виходить боком. Любить плітки.",
     interests: ["продажі", "барахолка", "плітки", "гроші", "схеми"],
@@ -226,7 +226,7 @@ const CHARACTERS = [
     name: "Дерек К'ю",
     gender: "m",
     emoji: "😤",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgsM4rOwDNDtCqV59OJ5ys0cO56LnF3H8mFm0sbR7DI6WYqtKoITHYS-1c-8uGtoY-Gf0IEwxKYqXv-ULsD5Dpbv96-vQqTMR1H7AtYpDHP76JP5NZgnz_AXaIXdgJQiLny8p3jaWbIZyVttS7jvfZn7uVK5JXQ7TUJDV6aE2kQY_bcUlwa4-KI9efOZYQ", // URL: "https://..."
+    avatar: "", // URL: "https://..."
     color: "#ec7063",
     bio: "Емоційно нестабільний. Вважає, що дівчата його не розуміють. Подобається Кейт, яка ставиться байдуже. Саюрі його бісить.",
     interests: ["музика", "самотність", "скарги", "нічні роздуми"],
@@ -243,7 +243,7 @@ const CHARACTERS = [
     name: "Кент Уайт",
     gender: "m",
     emoji: "🏃",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgSYk5a8B6aEPqG-ZggBwwvEJrY4fF_5I2rXYWSsFJdIfx9q_kqID2YVDWIxFWc7KDHzRCQabJrr-zcbvS4u6ogVO1N1sjLO-3GgBw-zSht-LZTbRnF8-DLjOgQnOzDxNl96wbpkOZd30S_VEy2jUuUXZKM8SPngwUcA1PBqCg3vPRJWJmE95i3EIlC8Mc", // URL: "https://..."
+    avatar: "", // URL: "https://..."
     color: "#58d68d",
     bio: "Спорт, біг. Має багато спільного з Кейт Чан. Прямий, дисциплінований.",
     interests: ["біг", "спорт", "здоров'я", "ранкові тренування"],
@@ -325,18 +325,20 @@ const QUICK_MESSAGES = {
 const SPECIAL_DIALOGS = {
   "yani_jini": [
     "Джині, нова партія стікерів зайшла ✨",
-    "Кіса, ти не повіриш яку плітку я чула...",
+    "Кицю, ти не повіриш яку плітку я сьогодні почула...",
     "Пішли в кіно про мультивсесвіт?",
+    "Там нове цікаве кіно випустили, можна разом глянути.",
+    "З радістю запишу до твого блокнота кілька нових цікавих серіалів",
     "Твій тамагочі як? Мій майже еволюціонував",
     "Згадаймо той раз з пакетами від снеків 😂",
     "Після роботи — чай і ніяких людей, окрім тебе?",
     "Знайшла блокнот з мультиручками. Хочеш половину?"
   ],
   "jini_yani": [
-    "Кіса, ти перша маєш це почути…",
+    "Кицю, ти перша маєш це почути…",
     "На роботі сьогодні було смішно до сліз",
-    "Твій тамагочі ще живий? Мій майже легенда",
-    "Є плітка, але тільки тобі",
+    "Твій тамагочі ще живий? Мій вже майже легенда",
+    "Є цікава чутка, але тільки для тебе. Інклюзив.",
     "Кафе після зміни? Я пригощаю пакетиками 🍟"
   ],
   "yani_akira": [
@@ -518,9 +520,114 @@ const RELATIONSHIP_TYPES = {
 
 const RELATIONSHIP_CHANGE_POLICIES = ["day", "week", "month", "never"];
 
+
+/* Коментарі під постами: ключ (слова через | ) → фрази */
+const COMMENT_REACTIONS = [
+  { keys: "кіно|фільм|сеанс", lines: [
+    "Теж хочу в кіно на вихідних",
+    "Що саме дивились?",
+    "О, і як враження після титрів?",
+    "Можна з вами?",
+    "Заради цього відпрошусь щоб сходити подивитись кіно",
+    "Звісно я ні на що не натякаю. Але я з радістю піду з вами.",
+    "Я можу скласти компанію"
+  ]},
+  { keys: "код|програм|дебаж|баг", lines: [
+    "Поважаю терпіння з багами",
+    "У мене теж був такий вечір у редакторі",
+    "Головне — не спалити дедлайн",
+    "Можна глянути?",
+    "Якщо що, можу глянути свіжим оком"
+  ]},
+  { keys: "тамагочі|стікер|блокнот|стаціонер", lines: [
+    "Покажи фото колекції, якщо можна",
+    "Я б таке теж хотіла/хотів",
+    "Стаціонерія — слабка сторона",
+    "Звучить затишно"
+  ]},
+  { keys: "біг|спорт|тренув|кінь|коні", lines: [
+    "Поважаю самодисципліну",
+    "Я б так не зможу щодня",
+    "Погода сьогодні якраз для цього",
+    "Я більш до пасивного відпочинку відношусь",
+    "Ех, прикольно",
+    "Тримай темп"
+  ]},
+  { keys: "аніме|дакімакур|стрім|ігр", lines: [
+    "Що за тайтл?",
+    "Класика нічного сеансу",
+    "Скинь назву, цікаво",
+    "Знайоме відчуття"
+  ]},
+  { keys: "сумн|поган|важк|самот|втоми", lines: [
+    "Чую тебе. Якщо треба — напиши в особисті",
+    "Тримайся, це мине",
+    "Не треба тримати все в собі",
+    "Ох, розумію...",
+    "Можна просто помовчати разом"
+  ]},
+  { keys: "плітк|чутк|біс|дратує|відмов", lines: [
+    "Ого, напруга…",
+    "Краще б без публічного розносу",
+    "Некомфортно це читати, чесно",
+    "А можна без цього?",
+    "Знову за старе??",
+    "Відчиніть вікно, мій вихід звідси",
+    "Ндамс",
+    "Набридло таке читати",
+    "Може, варто охолонути?"
+  ]}
+];
+
+const COMMENT_GENERIC = [
+  "Цікавий погляд",
+  "Має сенс",
+  "Ок",
+  "Як скажеш",
+  "Не подумала/не подумав з такого боку",
+  "Дякую, що {a:написала/написав}",
+  "Гарно {a:написала/написав}",
+  "Під цим можу підписатись",
+  "Збережу на потім",
+  "Трохи резонує",
+  "Спокійно і по суті — імпонує"
+];
+
+const COMMENT_BY_REL = {
+  annoyed: ["Серйозно?", "Краще б не бачила/не бачив цього", "Мені вже досить таких постів", "Не мій формат", "скільки ще можна??", "Задовбало!"],
+  crush: ["Завжди цікаво читати твої думки", "Усміхнаюсь, читаючи", "Напиши ще, якщо буде бажання", "Ти вмієш підмічати дрібниці", "Хочу ще твоїх дописів...", "Чекатиму на наступну твою публікацію", "Приємно бачити тебе тут знову!"],
+  close: ["Розкажи трохи більше, цікаво", "Я з тобою з радістю про це поговорю", "Звучить по-твоєму", "Зберігаю у голові", "Підтримую", "Я на твоєму боці", "Це точно", "Люблю читати подібні дописи"]
+};
+
+/* Чат: загальні відповіді (по рядку) */
+const CHAT_CRAFT = {
+  greetings: [
+    "Привіт 😊",
+    "О, привіт! Як ти?",
+    "Привітики. Що новенького?",
+    "Хей. Радію бачити тебе онлайн."
+  ],
+  howAreYou: [
+    "Та нормально. Зараз {status}.",
+    "Ага, я {status}. А ти?",
+    "Більш-менш. День звичайний.",
+    "Добре, дякую що питаєш."
+  ],
+  busy: [
+    "Зараз «{status}», відповім пізніше",
+    "Трішки зайнятий/зайнята. Не ігнорую навмисно."
+  ],
+  yesNo: ["Ок.", "Добре.", "Зрозуміла/зрозумів.", "Тоді так і зробимо.", "Гаразд."],
+  support: [
+    "Чую тебе. Якщо треба виговоритись — я тут.",
+    "Ох… тримайся. Можеш написати детальніше.",
+    "Шкода, що так. Не тримай у собі."
+  ]
+};
+
 const SAMPLE_POSTS = [
   { author: "yani", text: "Новий блокнот і пачка стікерів. Щастя існує. ✨", likes: ["jini", "akira", "giki"] },
-  { author: "jini", text: "Сьогодні дізналася ТАКУ плітку... але поки мовчу 😏 Хто здогадується?", likes: ["yani", "cornel"] },
+  { author: "jini", text: "Сьогодні дізналася ТАКУ річ... але поки мовчу 😏 Хто здогадується?", likes: ["yani", "cornel"] },
   { author: "sayuri", text: "Написала нову пісню. Думаю про одного хлопця... 🎤💗", likes: ["yani", "jini"] },
   { author: "derek", text: "Офіційно: деякі люди мене просто бісять. Особливо ті, хто не розуміє натяків. @sayuri", likes: ["cornel"] },
   { author: "akira", text: "Нічний стрім + ролики. Хто не спить — залітайте.", likes: ["yani", "giki", "jura"] },
@@ -532,7 +639,7 @@ const SAMPLE_POSTS = [
 ];
 
 const GALLERY = [
-  { id: 1, author: "yani", emoji: "📓", desc: "Розворот блокнота зі стікерами", tags: ["канцелярія", "стікери"] },
+  { id: 1, author: "yani", emoji: "📓", desc: "Розворот блокнота зі стікерами", tags: ["стаціонерія", "стікери"] },
   { id: 2, author: "jini", emoji: "🍿", desc: "Сторінка журналу з пакетами від снеків", tags: ["колекція", "жарти"] },
   { id: 3, author: "sayuri", emoji: "🧸", desc: "Іграшка, яку зшила сама", tags: ["рукоділля", "іграшки"] },
   { id: 4, author: "giki", emoji: "🖥️", desc: "Скріншот нічного коду", tags: ["програмування", "ніч"] },
@@ -604,25 +711,25 @@ const GAMES = [
   }
 ];
 
-const MEETUP_PLACES = ["кінотеатр", "кафе", "парк", "аніме-магазин", "онлайн у грі", "на стрімі", "на пробіжку", "біля ставка", "книгарня"];
+const MEETUP_PLACES = ["кінотеатр", "кафе", "музей", "перукарня", "лікарня", "екскурсія", "опера", "театр", "концерт", "парк", "аніме-магазин", "онлайн у грі", "на стрімі", "на пробіжці", "біля ставка", "книгарня"];
 
 /* Система досягнень */
 const ACHIEVEMENTS = [
-  { id: "first_like", name: "Перший лайк", desc: "Постав першу вподобайку", emoji: "🤍", condition: "likes", target: 1 },
-  { id: "social_10", name: "Соціальна метелик", desc: "Постав 10 вподобайок", emoji: "🦋", condition: "likes", target: 10 },
+  { id: "first_like", name: "Перша вподобайка", desc: "Постав першу вподобайку", emoji: "🤍", condition: "likes", target: 1 },
+  { id: "social_10", name: "Соціальний метелик", desc: "Постав 10 вподобайок", emoji: "🦋", condition: "likes", target: 10 },
   { id: "chatter", name: "Балакун", desc: "Надішли 5 повідомлень", emoji: "💬", condition: "messages", target: 5 },
   { id: "deep_talk", name: "Глибока розмова", desc: "Надішли 20 повідомлень", emoji: "🌙", condition: "messages", target: 20 },
   { id: "host", name: "Організатор", desc: "Запропонуй зустріч", emoji: "📍", condition: "meetings", target: 1 },
   { id: "party", name: "Тусовщик", desc: "3 прийняті зустрічі", emoji: "🎉", condition: "meetings_accepted", target: 3 },
   { id: "gamer", name: "Геймер", desc: "Зіграй у будь-яку гру", emoji: "🎮", condition: "games", target: 1 },
-  { id: "champion", name: "Чемпіон", desc: "Виграй 3 ігри", emoji: "🏆", condition: "games_won", target: 3 },
+  { id: "champion", name: "Чемпіон", desc: "Виграй 3 гри", emoji: "🏆", condition: "games_won", target: 3 },
   { id: "poster", name: "Автор", desc: "Опублікуй допис", emoji: "✍️", condition: "posts", target: 1 },
   { id: "feed_master", name: "Голос стрічки", desc: "5 власних дописів", emoji: "📢", condition: "posts", target: 5 },
   { id: "friend_maker", name: "Дружелюбний", desc: "Додай когось у друзі", emoji: "🤝", condition: "friends_added", target: 1 },
   { id: "night_owl", name: "Нічна сова", desc: "Поспілкуйся з совою (Гікі, Акіра, Джура, Дерек)", emoji: "🦉", condition: "talk_owl", target: 1 },
   { id: "drama", name: "Свідок драми", desc: "Побач пост Дерека про Саюрі", emoji: "🎭", condition: "see_drama", target: 1 },
   { id: "bestie", name: "Найкраща подруга", desc: "Поговори з Джині 3 рази", emoji: "💕", condition: "talk_jini", target: 3 },
-  { id: "crush_line", name: "Лінія кохання", desc: "Напиши Акірі, коли ти Яні (або навпаки)", emoji: "💗", condition: "talk_crush", target: 1 },
+  { id: "crush_line", name: "Лінія кохання", desc: "Напиши Акірі.", emoji: "💗", condition: "talk_crush", target: 1 },
   { id: "explorer", name: "Дослідник", desc: "Відкрий профілі 5 різних людей", emoji: "🔍", condition: "profiles", target: 5 },
   { id: "gallery_fan", name: "Цінитель", desc: "Відкрий 3 роботи в галереї", emoji: "🖼", condition: "gallery", target: 3 },
   { id: "all_games", name: "Колекціонер ігор", desc: "Спробуй 4 різні ігри", emoji: "🎲", condition: "unique_games", target: 4 }

@@ -744,6 +744,7 @@ const UI = {
     }
     if (name === "gallery") this.renderGallery();
     if (name === "games") this.renderGames();
+    if (name === "craft" && typeof CraftUI !== "undefined") CraftUI.open();
     if (name === "messages") this.renderMessagesList();
   },
 

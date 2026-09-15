@@ -141,7 +141,7 @@ const CHARACTERS = [
     name: "Саюрі Кіт",
     gender: "f",
     emoji: "🎤",
-    avatar: "", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEhZ86sfJyXVUZ5W_dGDHW9nTmM-ns3Nz0hzKDddBIT0nzTySpqHaX74g5T0ZROux6y_z1ih8pJlum0gttajbGmMI27KSwq6yl70vWpWzvrYcx_HF68U9Jo1B7tKRvoRxGODaP2kPxgPG8fj1TWrxkv3jqQi25w7TAx9BGQ_No6seVQSxKrufXybZ_d4s7k", // URL: "https://..."
     color: "#c39bd3",
     bio: "Закохана в Дерека К'ю. Співає, створює іграшки. Часто сумує, але живе у фантазіях, що почуття взаємні.",
     interests: ["спів", "іграшки", "мрії", "романтика", "рукоділля"],

@@ -209,7 +209,7 @@ const CHARACTERS = [
     name: "Корнел Вус",
     gender: "m",
     emoji: "📦",
-    avatar: "", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEiWYzjeUTFiYOn6la_I85bW21t8ce-aUt0RSS-D20N2sAi-R5__k0rkL51aECpvgUYS1nCg3bdFCbFawuVCtQW6HV4uRkxZJGxtbTzU_7lgq6iScgEnK-_ITRNmrevbnRptW-Rwo-G6HomYW4z_i0tOh3UA2MgZ_ADhKKtcczKJygPDAYwCmdj9ILDiBsQ", // URL: "https://..."
     color: "#af7ac5",
     bio: "Продає речі з барахолки. Мріє про бізнес. Хитрий, але хитрість часто виходить боком. Любить плітки.",
     interests: ["продажі", "барахолка", "плітки", "гроші", "схеми"],

@@ -158,7 +158,7 @@ const CHARACTERS = [
     name: "Кейт Чан",
     gender: "f",
     emoji: "🐴",
-    avatar: "", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjRpkjrxbFQPsjAFMo2CtJ_jek6IutY9NkWSl0mMRpqRv9TUSW8EEgYaBcbsL0ApzDYQRj7rRyWRUZPGScps8s_2LpvyuugRC3YmMHLStj5qSU0EtYZa2LCVvag4JP-c0jVxQJJZ3syKFux0lWNlkrhKFJv-hQZ9m3vvHuOOQW0PB5-z0WeEoUMC-d1Hfg", // URL: "https://..."
     color: "#58d68d",
     bio: "Соціально активна. Кінний спорт, постійні подорожі. Відкрита, але вибіркова у близьких стосунках.",
     interests: ["кінний спорт", "подорожі", "фото", "активний відпочинок"],

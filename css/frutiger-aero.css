@@ -1604,6 +1604,19 @@ ul#online-friends:not(.collapsed),
   z-index: 1;
 }
 
+.sidebar .craft-nav-btn {
+  margin-top: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
+.craft-nav-btn {
+  flex-shrink: 0 !important;
+  order: 4 !important;
+  position: relative;
+  z-index: 1;
+}
+
 /* Розгорнутий список росте вниз усередині блоку друзів */
 .friends-mini.expanded #online-friends:not(.collapsed) {
   max-height: min(40vh, 320px) !important;

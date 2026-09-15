@@ -243,7 +243,7 @@ const CHARACTERS = [
     name: "Кент Уайт",
     gender: "m",
     emoji: "🏃",
-    avatar: "", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgSYk5a8B6aEPqG-ZggBwwvEJrY4fF_5I2rXYWSsFJdIfx9q_kqID2YVDWIxFWc7KDHzRCQabJrr-zcbvS4u6ogVO1N1sjLO-3GgBw-zSht-LZTbRnF8-DLjOgQnOzDxNl96wbpkOZd30S_VEy2jUuUXZKM8SPngwUcA1PBqCg3vPRJWJmE95i3EIlC8Mc", // URL: "https://..."
     color: "#58d68d",
     bio: "Спорт, біг. Має багато спільного з Кейт Чан. Прямий, дисциплінований.",
     interests: ["біг", "спорт", "здоров'я", "ранкові тренування"],

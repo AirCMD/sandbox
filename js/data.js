@@ -107,7 +107,7 @@ const CHARACTERS = [
     name: "Яні Куронеко",
     gender: "f",
     emoji: "🐱",
-    avatar: "", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgkPXEo9bsccA1-IIT-KUyEuAKqHDr_TqUk-nmd4oksI3rhDnHSdk6f5W33CTttxhY2F1iowhoRqtd-PumQD7mnkhODarmDRto8UmhRwQuGaEAgSmC26uPA7euxu72oZ0wYTV6ALPHLEULM94dQodtfoq9TC7kXm8Zen1OY2zuAUvcdWQxnXvrgNyQw9WE", // URL: "https://..."
     color: "#e8a0bf",
     bio: "Релакс-музика, медитація, кіно про мультивсесвіт, мітика, тамагочі й канцелярія. Працює в аніме-магазині.",
     interests: ["релакс-музика", "медитація", "мультивсесвіт", "мітика", "тамагочі", "блокноти", "мультиручки", "стікери"],

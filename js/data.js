@@ -226,7 +226,7 @@ const CHARACTERS = [
     name: "Дерек К'ю",
     gender: "m",
     emoji: "😤",
-    avatar: "", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgsM4rOwDNDtCqV59OJ5ys0cO56LnF3H8mFm0sbR7DI6WYqtKoITHYS-1c-8uGtoY-Gf0IEwxKYqXv-ULsD5Dpbv96-vQqTMR1H7AtYpDHP76JP5NZgnz_AXaIXdgJQiLny8p3jaWbIZyVttS7jvfZn7uVK5JXQ7TUJDV6aE2kQY_bcUlwa4-KI9efOZYQ", // URL: "https://..."
     color: "#ec7063",
     bio: "Емоційно нестабільний. Вважає, що дівчата його не розуміють. Подобається Кейт, яка ставиться байдуже. Саюрі його бісить.",
     interests: ["музика", "самотність", "скарги", "нічні роздуми"],

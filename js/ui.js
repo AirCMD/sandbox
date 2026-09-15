@@ -600,11 +600,44 @@ renderGallery() {
 
   renderQuickReplies() {
     const container = document.getElementById("quick-replies");
+    const dialogueOptions = engine.getDialogueOptions(this.playerId, this.currentChatId);
+    const extras = engine.getExtraDialogueTriggers(this.playerId, this.currentChatId);
+
+    if (dialogueOptions || extras.length) {
+      const all = [...(dialogueOptions || []), ...extras.map(e => ({ id: e.id, text: e.text, kind: "line" }))];
+      container.innerHTML = all.map(o => `<button data-dopt="${o.id}">${this.escape(o.text)}</button>`).join("");
+      container.onclick = (e) => {
+        const btn = e.target.closest("button[data-dopt]");
+        if (!btn) return;
+        this.sendDialogueChoice(btn.dataset.dopt);
+      };
+      return;
+    }
+
     const replies = engine.getQuickReplies(this.playerId, this.currentChatId);
     container.innerHTML = replies.map(r => `<button>${r}</button>`).join("");
     container.onclick = (e) => {
       if (e.target.tagName === "BUTTON") this.sendMessage(e.target.textContent);
     };
+  },
+
+  sendDialogueChoice(optionId) {
+    const result = engine.resolveDialogueChoice(this.playerId, this.currentChatId, optionId);
+    if (!result) return;
+    const key = [this.playerId, this.currentChatId].sort().join("_");
+    if (!engine.messages[key]) engine.messages[key] = [];
+    engine.messages[key].push({ from: this.playerId, text: result.playerText, read: true, ts: Date.now() });
+    this.renderChatMessages();
+
+    setTimeout(() => {
+      engine.messages[key].push({ from: this.currentChatId, text: result.botText, read: true, ts: Date.now() });
+      this.renderChatMessages();
+      this.renderQuickReplies();
+      if (this.viewingProfileId === this.currentChatId) {
+        this.refreshBotProfileStatus(this.currentChatId);
+      }
+      this.renderMePanel();
+    }, 1200 + Math.random() * 1500);
   },
 
   sendMessage(text) {

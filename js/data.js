@@ -191,7 +191,7 @@ const CHARACTERS = [
     id: "akira",
     name: "Акіра Бакенеко",
     gender: "m",
-    emoji: "",
+    // emoji: "",
     avatar: "URL: https://blogger.googleusercontent.com/img/a/AVvXsEg6TLuKwTa6G7t32SgZE9RiJp5vLqOOqtC7lBHiLXIjBZOZAx1Dku1fWM8x_bc1lXwA1pF32pojhJW02L1BxI3oJfuvwBhC6i9Di0zPVQhzLcGslTae08Qe-4bRNEtHajGweOmDs9Snij-8QDCseC7KCckbjuGosEilTW3y2LxVSfdQ0WRgCTtt8us3ahI", // URL: "https://...🎮"
     color: "#e74c3c",
     bio: "Продавець-консультант у «Техсмітнику». Відеоігри, фастфуд, стрімери. Має 5 улюблених стрімерів.",

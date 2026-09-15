@@ -467,7 +467,9 @@ renderGallery() {
     }).join("") || '<p class="no-comments">Коментарів ще немає</p>';
 
     document.getElementById("modal-body").innerHTML = `
-      <div style="font-size:4rem;text-align:center;margin-bottom:12px">${item.emoji}</div>
+      const visualModal = item.image
+      ? `<img class="gallery-modal-img" src="${this.escape(item.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"/>`
+      : `<div style="font-size:4rem;text-align:center;margin-bottom:12px">${item.emoji}</div>`;
       <p><strong class="author" data-id="${item.author}" style="cursor:pointer">${author.name}</strong></p>
       <p style="margin:8px 0">${item.desc}</p>
       <p style="font-size:0.85rem;color:var(--text-muted)">Теги: ${item.tags.join(", ")}</p>

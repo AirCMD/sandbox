@@ -136,7 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setInterval(() => {
     if (UI.playerId) {
-      UI.applyTheme();
+      // якщо відкритий профіль друга — його тема, інакше Яні
+      UI.applyTheme(UI.viewingProfileId || UI.playerId);
       UI.renderMePanel();
       UI.renderOnlineFriends();
     }

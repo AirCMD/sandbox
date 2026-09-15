@@ -1273,7 +1273,7 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -2;
-  background-image: url("../assets/bg.jpg");
+  background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEhfOktjrsqyQcDeS-zeQFyV9bMTv_cR2USkx8Pfepkq6myuowsEhtzjAwEOzEM9urTSI80xv6mYykRJByUUVNrbupsFnY2-RKGgCmDP3uoSOwqOjIvEae5XIN4Wo0tCt7qMCocdwa8kjdMg9jDxZ142ySbgWKigYy58t_KGRW92p-YOXZjmY2HjMSBcsQ8");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1485,4 +1485,126 @@ body.theme-orange .nav-btn.panel {
     rgba(240, 160, 80, 0.5) 30%,
     rgba(210, 110, 30, 0.78) 70%,
     rgba(140, 60, 10, 0.92) 100%) !important;
+}
+
+/* =========================================================
+   FIX: список друзів розтягується вниз і коректно згортається
+   ========================================================= */
+.sidebar {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  align-content: flex-start;
+}
+
+.friends-mini.panel {
+  overflow: visible !important;
+  max-height: none !important;
+  flex-shrink: 0;
+}
+
+/* Згорнуто */
+#online-friends.friends-list.collapsed,
+ul#online-friends.collapsed,
+.friends-list.collapsed {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Розгорнуто — вниз, видно всіх */
+#online-friends.friends-list:not(.collapsed),
+ul#online-friends:not(.collapsed),
+.friends-list:not(.collapsed) {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px 8px !important;
+  max-height: min(55vh, 420px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 4px 10px 14px !important;
+  margin: 0 !important;
+  opacity: 1;
+  pointer-events: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#online-friends:not(.collapsed) li,
+.friends-list:not(.collapsed) li {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  gap: 4px !important;
+}
+
+.friends-mini.expanded {
+  /* панель росте вниз у сайдбарі */
+  margin-bottom: 4px;
+}
+
+.friends-toggle {
+  cursor: pointer !important;
+  user-select: none;
+}
+.friends-toggle:hover {
+  filter: brightness(1.12);
+}
+
+/* =========================================================
+   FIX: кнопки не стрибають на аватар Яні
+   ========================================================= */
+.sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Аватар завжди зверху, не перекривається */
+.me-panel {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  flex-shrink: 0 !important;
+  order: 0 !important;
+  margin-bottom: 4px !important;
+  /* фон панелі щоб кнопоки не «проглядали» крізь */
+  isolation: isolate;
+}
+
+.main-nav {
+  flex-shrink: 0 !important;
+  order: 1 !important;
+  position: relative;
+  z-index: 1;
+}
+
+.friends-mini {
+  flex-shrink: 0 !important;
+  order: 2 !important;
+  position: relative;
+  z-index: 1;
+  /* ріст лише вниз, без negative margin */
+  margin-top: 0 !important;
+  transform: none !important;
+}
+
+.status-selector {
+  flex-shrink: 0 !important;
+  order: 3 !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Розгорнутий список росте вниз усередині блоку друзів */
+.friends-mini.expanded #online-friends:not(.collapsed) {
+  max-height: min(40vh, 320px) !important;
 }

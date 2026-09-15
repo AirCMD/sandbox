@@ -6,6 +6,7 @@
 const UI = {
   playerId: null,
   currentChatId: null,
+  viewingProfileId: null, // чий профіль відкритий (тема)
 
   showCharacterSelect() {
     const modal = document.getElementById("character-select");
@@ -32,9 +33,11 @@ const UI = {
     modal.hidden = false;
   },
 
-  applyTheme() {
-    if (!this.playerId) return;
-    const mood = engine.getState(this.playerId).mood;
+  applyTheme(themeForId = null) {
+    const id = themeForId || this.playerId;
+    if (!id) return;
+    const char = engine.getCharacter(id);
+    const mood = engine.getState(id)?.mood || "спокійний";
     const theme = MOOD_THEMES[mood] || MOOD_THEMES["спокійний"];
     const keep = [...document.body.classList].filter(c => !c.startsWith("theme-"));
     document.body.className = [...keep, theme.class].join(" ");
@@ -42,8 +45,10 @@ const UI = {
     if (typeof ThemeSFX !== "undefined") ThemeSFX.playTheme(theme.class);
     const label = document.getElementById("theme-label");
     if (label) {
-      const g = engine.getCharacter(this.playerId)?.gender;
-      label.textContent = theme.emoji + " тема: " + theme.name + " · " + engine.moodLabel(mood, g);
+      const whose = (themeForId && themeForId !== this.playerId)
+        ? ((char?.name || "").split(" ")[0] + ": ")
+        : "";
+      label.textContent = theme.emoji + " " + whose + "тема " + theme.name + " · " + engine.moodLabel(mood, char?.gender);
     }
   },
 
@@ -62,7 +67,8 @@ const UI = {
       const left = engine.activityRemainingLabel(this.playerId);
       st.textContent = s.status + (left ? " (" + left + ")" : "") + (s.thought ? " · " + s.thought : "");
     }
-    this.applyTheme();
+    // Не перебивати тему чужого профілю
+    if (!this.viewingProfileId) this.applyTheme(this.playerId);
   },
 
   friendsExpanded: false,
@@ -107,13 +113,22 @@ const UI = {
       ul.appendChild(li);
     });
 
+    const mini = document.getElementById("friends-mini");
+    if (mini) mini.classList.toggle("expanded", !!this.friendsExpanded);
+
     if (toggle && !toggle._bound) {
       toggle._bound = true;
-      toggle.onclick = () => {
+      toggle.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         this.friendsExpanded = !this.friendsExpanded;
+        // одразу клас, без очікування повного ре-рендеру
+        ul.classList.toggle("collapsed", !this.friendsExpanded);
+        if (mini) mini.classList.toggle("expanded", this.friendsExpanded);
         toggle.setAttribute("aria-expanded", this.friendsExpanded ? "true" : "false");
         toggle.textContent = this.friendsExpanded ? "Друзі (згорнути)" : "Друзі (показати всіх)";
         this.renderOnlineFriends();
+        // не крутимо сайдбар угору/вниз — інакше кнопки наїжджають на аватар
       };
     }
     if (toggle) {
@@ -350,7 +365,9 @@ const UI = {
       const authorEl = e.target.closest(".author, .mention");
       if (authorEl?.dataset.id) this.openBotProfile(authorEl.dataset.id);
     };
+    this.viewingProfileId = id;
     this.switchView("bot-profile");
+    this.applyTheme(id);
 
     document.getElementById("btn-message").onclick = () => this.openChat(id);
     document.getElementById("btn-toggle-friend").onclick = () => {
@@ -683,6 +700,11 @@ const UI = {
     document.body.classList.toggle("chat-open", name === "chat");
     if (name === "feed") this.renderFeed();
     if (name === "profile") this.renderProfile();
+    // Чужий профіль фарбує тема друга; усі інші екрани — тема Яні
+    if (name !== "bot-profile") {
+      this.viewingProfileId = null;
+      this.applyTheme(this.playerId);
+    }
     if (name === "gallery") this.renderGallery();
     if (name === "games") this.renderGames();
     if (name === "messages") this.renderMessagesList();

@@ -281,7 +281,7 @@ class BotEngine {
       if (c.id === post.author || Math.random() > 0.42) continue;
       const rel = this.relations[c.id]?.[post.author] || "neutral";
       if (rel === "blocked") continue;
-      const text = this.makeComment(rel, this.state[c.id]?.mood || "спокійний", post.text, c.id, used);
+      const text = this.makeComment(rel, this.state[c.id]?.mood || "спокійний", post.text, c.id, used, post.author);
       if (!text) continue;
       used.add(this.normPhrase(text));
       comments.push({ author: c.id, text });
@@ -294,65 +294,104 @@ class BotEngine {
     return (t || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim();
   }
 
-  /** Підставляє форми за статтю мовця: m / f */
+  /**
+   * Узгодження роду. pairs: [жіноча, чоловіча]
+   * gender: "f" | "m"
+   */
   genderize(text, gender) {
     if (!text) return text;
-    if (gender === "f") {
-      return text
-        .replace(/Згадав\/згадала/g, "Згадала")
-        .replace(/Думав\/думала/g, "Думала")
-        .replace(/хотів\/хотіла/g, "хотіла")
-        .replace(/Готовий\/готова/g, "Готова")
-        .replace(/Заряджений\/а/g, "Заряджена")
-        .replace(/важливий\/важлива/g, "важлива")
-        .replace(/згоден\/згодна/g, "згодна")
-        .replace(/\bЗгоден\b/g, "Згодна")
-        .replace(/\bзгоден\b/g, "згодна")
-        .replace(/\bДумав\b/g, "Думала")
-        .replace(/\bдумав\b/g, "думала")
-        .replace(/\bЗгадав\b/g, "Згадала")
-        .replace(/\bГотовий\b/g, "Готова")
-        .replace(/\bЗаряджений\b/g, "Заряджена")
-        .replace(/\bрідненька\b/g, "рідненька")
-        .replace(/\bСкучила\b/g, "Скучила")
-        .replace(/\bчула\b/g, "чула")
-        .replace(/вільна(?!\w)/g, "вільна");
+    const isF = gender === "f";
+    // [female, male] — обидва порядки слеша підтримуються
+    const pairs = [
+      ["написала", "написав"], ["написала", "написав"],
+      ["подумала", "подумав"], ["згадала", "згадав"],
+      ["хотіла", "хотів"], ["готова", "готовий"],
+      ["заряджена", "заряджений"], ["важлива", "важливий"],
+      ["згодна", "згоден"], ["думала", "думав"],
+      ["скучила", "скучив"], ["чула", "чув"],
+      ["вільна", "вільний"], ["склала", "склав"],
+      ["змогла", "зміг"], ["бачила", "бачив"],
+      ["не бачила", "не бачив"], ["усміхнулась", "усміхнувся"],
+      ["поговорила", "поговорив"], ["зберегла", "зберіг"],
+      ["прочитала", "прочитав"], ["побачила", "побачив"],
+      ["відзначила", "відзначив"], ["показала", "показав"],
+      ["поділилась", "поділився"], ["зрозуміла", "зрозумів"],
+      ["рада", "рад"], ["зайнята", "зайнятий"],
+      ["першою", "першим"], ["готова", "готовий"]
+    ];
+    let out = text;
+    // слеш-форми: а/б у будь-якому порядку
+    for (const [f, m] of pairs) {
+      const pick = isF ? f : m;
+      const re1 = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\/" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      const re2 = new RegExp(m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\/" + f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      out = out.replace(re1, pick).replace(re2, pick);
     }
-    // male
-    return text
-      .replace(/Згадав\/згадала/g, "Згадав")
-      .replace(/Думав\/думала/g, "Думав")
-      .replace(/хотів\/хотіла/g, "хотів")
-      .replace(/Готовий\/готова/g, "Готовий")
-      .replace(/Заряджений\/а/g, "Заряджений")
-      .replace(/важливий\/важлива/g, "важливий")
-      .replace(/згоден\/згодна/g, "згоден")
-      .replace(/\bЗгодна\b/g, "Згоден")
-      .replace(/\bзгодна\b/g, "згоден")
-      .replace(/\bДумала\b/g, "Думав")
-      .replace(/\bдумала\b/g, "думав")
-      .replace(/\bЗгадала\b/g, "Згадав")
-      .replace(/\bГотова\b/g, "Готовий")
-      .replace(/\bЗаряджена\b/g, "Заряджений")
-      .replace(/Привіт, рідненька/g, "Привіт")
-      .replace(/\bСкучила\b/g, "Скучив")
-      .replace(/\bСкучила трохи\b/g, "Скучив трохи")
-      .replace(/\bЗгадувала тебе\b/g, "Згадував тебе")
-      .replace(/\bЖарт чула\?/g, "Жарт чув?")
-      .replace(/коли будеш вільна/g, "коли будеш вільний")
-      .replace(/Ти мені важлива/g, "Ти мені важливий");
+    // «не X/не Y»
+    out = out.replace(/не\s+([а-яіїєґ'А-ЯІЇЄҐ]+)\s*\/\s*не\s+([а-яіїєґ'А-ЯІЇЄҐ]+)/gi, (_, a, b) => {
+      // якщо a закінчується на ла/лась — жіноче
+      const fem = /ла$|лась$|лася$/i.test(a) ? a : b;
+      const mas = /ла$|лась$|лася$/i.test(a) ? b : a;
+      return "не " + (isF ? fem : mas);
+    });
+    // окремі фікси
+    if (isF) {
+      out = out
+        .replace(/\bЗгоден\b/g, "Згодна").replace(/\bзгоден\b/g, "згодна")
+        .replace(/\bДумав\b/g, "Думала").replace(/\bдумав\b/g, "думала")
+        .replace(/\bЗгадав\b/g, "Згадала").replace(/\bГотовий\b/g, "Готова")
+        .replace(/\bЗаряджений\b/g, "Заряджена")
+        .replace(/\bРад\b(?=\s)/g, "Рада").replace(/\bрад\b(?=\s)/g, "рада");
+    } else {
+      out = out
+        .replace(/\bЗгодна\b/g, "Згоден").replace(/\bзгодна\b/g, "згоден")
+        .replace(/\bДумала\b/g, "Думав").replace(/\bдумала\b/g, "думав")
+        .replace(/\bЗгадала\b/g, "Згадав").replace(/\bГотова\b/g, "Готовий")
+        .replace(/\bЗаряджена\b/g, "Заряджений")
+        .replace(/Привіт, рідненька/g, "Привіт")
+        .replace(/\bСкучила\b/g, "Скучив")
+        .replace(/\bЗгадувала тебе\b/g, "Згадував тебе")
+        .replace(/\bЖарт чула\?/g, "Жарт чув?")
+        .replace(/коли будеш вільна/g, "коли будеш вільний")
+        .replace(/Ти мені важлива/g, "Ти мені важливий")
+        .replace(/\bРада\b(?=\s)/g, "Рад").replace(/\bрада\b(?=\s)/g, "рад");
+    }
+    // прибрати залишкові слеші виду слово/слово
+    out = out.replace(/([А-Яа-яІіЇїЄєҐґ']+)\/([А-Яа-яІіЇїЄєҐґ']+)/g, (_, a, b) => {
+      // евристика: жіночі закінчення
+      const aF = /ла$|лась$|лася$|на$|та$|ая$/i.test(a);
+      const bF = /ла$|лась$|лася$|на$|та$|ая$/i.test(b);
+      if (aF && !bF) return isF ? a : b;
+      if (bF && !aF) return isF ? b : a;
+      return isF ? a : b;
+    });
+    return out;
   }
 
-  makeComment(rel, mood, postText, speakerId, usedSet = null) {
-    const gender = this.getCharacter(speakerId)?.gender || "f";
+  /**
+   * Коментар: рід мовця (я …) + рід автора допису (ти …)
+   * Маркер {a:...} — форма про автора допису; решта — про мовця.
+   */
+  makeComment(rel, mood, postText, speakerId, usedSet = null, authorId = null) {
     const speaker = this.getCharacter(speakerId);
+    const author = this.getCharacter(authorId);
+    const gSelf = speaker?.gender || "f";
+    const gAuth = author?.gender || "f";
     const pt = (postText || "").toLowerCase();
+
+    const finish = (raw) => {
+      if (!raw) return null;
+      // спочатку форми про автора {a:написала/написав}
+      let t = raw.replace(/\{a:([^}]+)\}/g, (_, form) => this.genderize(form, gAuth));
+      t = this.genderize(t, gSelf);
+      return t;
+    };
+
     const pick = (arr) => {
       const free = arr.filter(t => {
-        const n = this.normPhrase(this.genderize(t, gender));
+        const n = this.normPhrase(finish(t));
         if (!n || n.length < 2) return false;
         if (usedSet && usedSet.has(n)) return false;
-        // не повторювати дуже короткі однотипні («добре», «ок», «ага»)
         if (usedSet && n.length <= 6) {
           for (const u of usedSet) if (u.length <= 6 && (u === n || u.includes(n) || n.includes(u))) return false;
         }
@@ -364,17 +403,16 @@ class BotEngine {
 
     let pool = [];
 
-    // Реакція на зміст допису
     if (/кіно|фільм|сеанс/.test(pt)) {
       pool = ["Теж хочу в кіно на вихідних", "Що саме дивились?", "О, і як враження після титрів?", "Я б склала/склав компанію"];
     } else if (/код|програм|дебаж|баг/.test(pt)) {
       pool = ["Поважаю терпіння з багами", "У мене теж був такий вечір у редакторі", "Головне — не спалити дедлайн", "Якщо що, можу глянути свіжим оком"];
     } else if (/тамагочі|стікер|блокнот|канцеляр/.test(pt)) {
-      pool = ["Покажи фото колекції, якщо можна", "Я б таке теж хотіла/хотів", "Канцелярія — слабка сторона 😅", "Звучить затишно"];
+      pool = ["Покажи фото колекції, якщо можна", "Я б таке теж хотіла/хотів", "Канцелярія — слабка сторона", "Звучить затишно"];
     } else if (/біг|спорт|тренув|кінь|коні/.test(pt)) {
-      pool = ["Повага до дисципліни", "Я б так не змогла/не зміг щодня", "Погода сьогодні якраз для цього", "Тримай темп 💪"];
+      pool = ["Повага до дисципліни", "Я б так не змогла/не зміг щодня", "Погода сьогодні якраз для цього", "Тримай темп"];
     } else if (/аніме|дакімакур|стрім|ігр/.test(pt)) {
-      pool = ["Що за тайтл/гру?", "Класика нічного сеансу", "Скинь назву, цікаво", "Знайоме відчуття"];
+      pool = ["Що за тайтл?", "Класика нічного сеансу", "Скинь назву, цікаво", "Знайоме відчуття"];
     } else if (/сумн|поган|важк|самот|втоми/.test(pt)) {
       pool = ["Чую тебе. Якщо треба — напиши в особисті", "Тримайся, це мине", "Не треба тримати все в собі", "Можна просто помовчати разом"];
     } else if (/плітк|чутк|біс|дратує|відмов/.test(pt)) {
@@ -392,7 +430,7 @@ class BotEngine {
           "Я б з тобою про це поговорила/поговорив",
           "Звучить по-твоєму",
           "Зберегла/зберіг у голові",
-          speaker?.id === "jini" ? "О, є деталі? Я вся увага 👀" : "Підтримую"
+          speaker?.id === "jini" ? "О, є деталі? Я вся увага" : "Підтримую"
         ];
       } else if (mood === "сумний") {
         pool = ["Розумію настрій", "Сьогодні важкуватий день і в мене", "Дякую, що ділишся", "Нехай хоч трохи відпустить"];
@@ -405,7 +443,9 @@ class BotEngine {
           "Цікавий погляд",
           "Має сенс",
           "Не подумала/не подумав з такого боку",
-          "Дякую, що написала/написав",
+          // рід автора допису (ти), не мовця
+          "Дякую, що {a:написала/написав}",
+          "Гарно {a:написала/написав}",
           "Під цим можу підписатись",
           "Збережу на потім",
           "Трохи резонує",
@@ -414,7 +454,6 @@ class BotEngine {
       }
     }
 
-    // Унікальний кут від особистості
     if (speaker?.id === "cornel" && Math.random() > 0.5) {
       pool = pool.concat(["Чув іншу версію цієї історії…", "Цікаво, хто ще це бачив"]);
     }
@@ -427,16 +466,14 @@ class BotEngine {
 
     const chosen = pick(pool);
     if (!chosen) {
-      // останній шанс — довша унікальна фраза
       const fallback = [
         `Про ${speaker?.interests?.[0] || "це"} я б ще поговорила/поговорив`,
         "Залишу без короткого «ок» — просто побачила/побачив і відзначила/відзначив",
         "Мовчки ставлю вподобайку в голові"
       ];
-      const fb = pick(fallback);
-      return fb ? this.genderize(fb, gender) : null;
+      return finish(pick(fallback));
     }
-    return this.genderize(chosen, gender);
+    return finish(chosen);
   }
 
   getCharacter(id) { return CHARACTERS.find(c => c.id === id); }
@@ -629,7 +666,8 @@ class BotEngine {
             this.state[c.id].mood,
             post.text,
             c.id,
-            used
+            used,
+            post.author
           );
           if (text) {
             used.add(this.normPhrase(text));

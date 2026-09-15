@@ -36,10 +36,15 @@ const UI = {
     if (!this.playerId) return;
     const mood = engine.getState(this.playerId).mood;
     const theme = MOOD_THEMES[mood] || MOOD_THEMES["спокійний"];
-    document.body.className = theme.class;
+    const keep = [...document.body.classList].filter(c => !c.startsWith("theme-"));
+    document.body.className = [...keep, theme.class].join(" ");
+    document.documentElement.style.setProperty("--theme-name", theme.name);
     if (typeof ThemeSFX !== "undefined") ThemeSFX.playTheme(theme.class);
     const label = document.getElementById("theme-label");
-    if (label) label.textContent = theme.emoji + " тема: " + theme.name;
+    if (label) {
+      const g = engine.getCharacter(this.playerId)?.gender;
+      label.textContent = theme.emoji + " тема: " + theme.name + " · " + engine.moodLabel(mood, g);
+    }
   },
 
   renderMePanel() {
@@ -48,8 +53,7 @@ const UI = {
     const s = engine.getState(this.playerId);
     const online = s.online ? '<div class="status-online">онлайн</div>' : '<div class="status-online" style="color:#ffb0b0">офлайн</div>';
     document.getElementById("me-panel").innerHTML = `
-      <div class="avatar lg aero-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}cc,${c.color})">${c.emoji}</div>
-      <div class="name">${c.name}</div>
+      <div class="avatar lg aero-avatar me-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}cc,${c.color})">${c.emoji}</div>
       ${online}
       <div class="mood">${engine.moodLabel(s.mood, c.gender)}</div>
     `;
@@ -215,6 +219,9 @@ const UI = {
 
   renderProfileTab(tab) {
     const content = document.getElementById("profile-content");
+    const view = document.getElementById("view-profile");
+    const scrollParent = view || content;
+    const savedScroll = scrollParent ? scrollParent.scrollTop : 0;
     const c = engine.getCharacter(this.playerId);
     const s = engine.getState(this.playerId);
 
@@ -297,6 +304,10 @@ const UI = {
           `).join("")}
         </div>`;
     }
+    // не стрибати вгору після «Опублікувати»
+    requestAnimationFrame(() => {
+      if (scrollParent) scrollParent.scrollTop = savedScroll;
+    });
   },
 
   openBotProfile(id) {
@@ -478,12 +489,17 @@ const UI = {
     const c = engine.getCharacter(toId);
     const s = engine.getState(toId);
     document.getElementById("chat-user-info").innerHTML = `
-      <div class="avatar sm ${s.online ? "online" : ""}">${c.emoji}</div>
-      <div><strong>${c.name}</strong><br><span style="font-size:0.8rem;color:var(--text-muted)">${s.online ? (s.status + (engine.activityRemainingLabel(toId) ? " · " + engine.activityRemainingLabel(toId) : "")) : "не в мережі"}</span></div>
+      <div class="chat-user-link" data-id="${toId}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <div class="avatar sm aero-avatar ${s.online ? "online" : ""}" style="background:linear-gradient(160deg,${c.color}aa,${c.color})">${c.emoji}</div>
+        <div><strong>${c.name}</strong><br><span style="font-size:0.8rem;opacity:0.9">${s.online ? (s.status + (engine.activityRemainingLabel(toId) ? " · " + engine.activityRemainingLabel(toId) : "")) : "не в мережі"}</span></div>
+      </div>
     `;
     this.renderChatMessages();
     this.renderQuickReplies();
     this.switchView("chat");
+
+    const link = document.querySelector("#chat-user-info .chat-user-link");
+    if (link) link.onclick = () => this.openBotProfile(toId);
 
     document.getElementById("chat-back").onclick = () => this.switchView("messages");
     document.getElementById("btn-block").onclick = () => {
@@ -678,4 +694,3 @@ const UI = {
     this.renderFeed();
   }
 };
-

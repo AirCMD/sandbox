@@ -1058,39 +1058,60 @@ class BotEngine {
   scheduleTicks() {
     const tick = () => {
       const now = Date.now();
+      let playerMoodChanged = false;
       CHARACTERS.forEach(c => {
         const st = this.state[c.id];
-        // Поки активність іде — статус НЕ змінюємо (кіно = 1.5–2.5 год реально)
-        if (st.activityUntil && st.activityUntil > now) {
-          // настрій під час зайнятості змінюється дуже рідко (~5%)
-          if (Math.random() > 0.95) {
+        const isPlayer = typeof UI !== "undefined" && c.id === UI.playerId;
+        const busy = st.activityUntil && st.activityUntil > now;
+
+        if (busy) {
+          // Статус під час кіно/роботи лишається, але НАСТРІЙ може змінитись
+          // (для гравця — частіше, щоб тема UI оновлювалась)
+          const moodChance = isPlayer ? 0.35 : 0.12;
+          if (Math.random() < moodChance) {
+            const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
+            if (st.mood !== newMood) {
+              st.mood = newMood;
+              st.thought = this.pickThought(newMood, c.gender);
+              if (isPlayer) playerMoodChanged = true;
+            }
+          } else if (Math.random() > 0.9) {
             st.thought = this.pickThought(st.mood, c.gender);
           }
-          return;
+        } else {
+          if (Math.random() > 0.2) {
+            const act = this.pickActivity(c);
+            st.status = act.status;
+            st.activityUntil = act.until;
+            st.activityKind = act.kind;
+            st.online = this.shouldBeOnline(c, act);
+          }
+          if (Math.random() > 0.7) {
+            const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
+            if (st.mood !== newMood) {
+              st.mood = newMood;
+              st.thought = this.pickThought(newMood, c.gender);
+              if (isPlayer) playerMoodChanged = true;
+            }
+          }
+          if (Math.random() > 0.9) st.online = this.shouldBeOnline(c);
         }
-        // Час вийшов — нова активність (майже завжди)
-        if (Math.random() > 0.2) {
-          const act = this.pickActivity(c);
-          st.status = act.status;
-          st.activityUntil = act.until;
-          st.activityKind = act.kind;
-          st.online = this.shouldBeOnline(c, act);
-        }
-        // Настрій міняється рідше, ніж раніше
-        if (Math.random() > 0.82) {
-          const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
-          st.mood = newMood;
-          st.thought = this.pickThought(newMood, c.gender);
-        }
-        if (Math.random() > 0.9) st.online = this.shouldBeOnline(c);
       });
       if (Math.random() > 0.78) this.maybeGossip();
       if (Math.random() > 0.9 && this.state["sayuri"]?.online) this.maybeSayuriDerekDrama();
       if (Math.random() > 0.94) this.botsStartGame();
-      // Тік раз на ~45–75 с — менше навантаження й стрибків
-      setTimeout(tick, 45000 + Math.random() * 30000);
+
+      // Тема сторінки залежить від настрою Яні
+      if (playerMoodChanged && typeof UI !== "undefined") {
+        try {
+          UI.applyTheme();
+          UI.renderMePanel();
+        } catch (_) {}
+      }
+
+      setTimeout(tick, 35000 + Math.random() * 25000);
     };
-    setTimeout(tick, 15000);
+    setTimeout(tick, 8000);
   }
 
   botsStartGame() {

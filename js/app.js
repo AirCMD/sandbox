@@ -136,10 +136,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setInterval(() => {
     if (UI.playerId) {
+      UI.applyTheme();
       UI.renderMePanel();
       UI.renderOnlineFriends();
     }
-  }, 28000);
+  }, 12000);
 
   setInterval(() => {
     if (UI.playerId && Math.random() > 0.65) {

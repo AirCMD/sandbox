@@ -431,7 +431,7 @@ const UI = {
     };
   },
 
-  renderGallery() {
+renderGallery() {
     const grid = document.getElementById("gallery-grid");
     grid.innerHTML = "";
     GALLERY.forEach(item => {
@@ -439,7 +439,10 @@ const UI = {
       el.className = "gallery-item";
       const count = engine.getGalleryLikeCount(item.id);
       const liked = engine.hasGalleryLike(item.id, this.playerId);
-      el.innerHTML = item.emoji + '<span class="likes">' + (liked ? "❤️" : "♥") + " " + count + "</span>";
+      const visual = item.image
+        ? `<img class="gallery-img" src="${this.escape(item.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove();this.parentNode.textContent='${item.emoji}'"/>`
+        : item.emoji;
+      el.innerHTML = visual + '<span class="likes">' + (liked ? "❤️" : "♥") + " " + count + "</span>";
       el.onclick = () => this.openGalleryModal(item);
       grid.appendChild(el);
     });

@@ -312,7 +312,7 @@ body::after {
 .main-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .nav-btn,
 .side-btn {

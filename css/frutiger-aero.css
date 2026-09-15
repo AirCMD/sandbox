@@ -1682,3 +1682,8 @@ ul#online-friends:not(.collapsed),
   padding: 10px 0;
   margin-top: 8px;
 }
+.sidebar .craft-nav-btn {
+  margin-top: 4px;
+  width: 100%;
+  justify-content: center;
+}

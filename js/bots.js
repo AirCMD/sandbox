@@ -13,6 +13,8 @@ class BotEngine {
     this.meetings = [];
     this.activeGames = [];
     this.gossipLog = [];
+    this.dialogueState = {};          // { "yani_akira": "start" }
+    this.offscreenState = {};         // { "derek_sayuri": "start" }
     // Лайки галереї: { itemId: Set of userIds }
     this.galleryLikes = {};
     this.galleryComments = {};
@@ -1284,6 +1286,7 @@ class BotEngine {
         }
       });
       if (Math.random() > 0.78) this.maybeGossip();
+      this.tickOffscreenDialogues();
       if (Math.random() > 0.9 && this.state["sayuri"]?.online) this.maybeSayuriDerekDrama();
       if (Math.random() > 0.94) this.botsStartGame();
       // рідка спроба змінити стосунки
@@ -1355,67 +1358,127 @@ class BotEngine {
     const q = query.toLowerCase();
     return this.posts.filter(p => p.text.toLowerCase().includes(q));
   }
+    getActiveDialogueTree(fromId, toId) {
+    return DIALOGUE_TREES[`${fromId}_${toId}`] || null;
+  }
+
+  getCurrentDialogueNode(fromId, toId) {
+    const tree = this.getActiveDialogueTree(fromId, toId);
+    if (!tree) return null;
+    const key = `${fromId}_${toId}`;
+    let nodeId = this.dialogueState[key] || tree.root;
+    let node = tree.nodes[nodeId];
+    if (node?.requiresRelationship) {
+      const st = this.state[toId];
+      if (st?.relationship?.type !== node.requiresRelationship) {
+        nodeId = tree.root;
+        node = tree.nodes[nodeId];
+      }
+    }
+    return { tree, node, nodeId, key };
+  }
+
+  getDialogueOptions(fromId, toId) {
+    const cur = this.getCurrentDialogueNode(fromId, toId);
+    if (!cur?.node) return null;
+    if (cur.node.playerLine) {
+      return [{ id: cur.nodeId, text: cur.node.playerLine, kind: "line" }];
+    }
+    if (cur.node.responseOptions) {
+      return cur.node.responseOptions.map(o => ({ id: o.id, text: o.text, kind: "choice" }));
+    }
+    return null;
+  }
+
+  getExtraDialogueTriggers(fromId, toId) {
+    const tree = this.getActiveDialogueTree(fromId, toId);
+    if (!tree) return [];
+    const st = this.state[toId];
+    return Object.entries(tree.nodes)
+      .filter(([id, n]) => n.requiresRelationship && st?.relationship?.type === n.requiresRelationship)
+      .map(([id, n]) => ({ id, text: n.playerLine }));
+  }
+
+  resolveDialogueChoice(fromId, toId, optionId) {
+    const cur = this.getCurrentDialogueNode(fromId, toId);
+    if (!cur?.node) return null;
+    const group = moodGroup(this.state[toId]?.mood);
+    const key = cur.key;
+
+    if (cur.node.playerLine && (optionId === cur.nodeId)) {
+      const resp = cur.node.responses[group] || cur.node.responses.neutral;
+      if (!resp) return null;
+      if (resp.effect) this.applyDialogueEffect(fromId, toId, resp.effect);
+      this.dialogueState[key] = resp.next || cur.tree.root;
+      return { playerText: cur.node.playerLine, botText: resp.text, ended: !resp.next };
+    }
+
+    if (cur.node.responseOptions) {
+      const opt = cur.node.responseOptions.find(o => o.id === optionId);
+      if (!opt) return null;
+      const replyMap = cur.node.botReplies[optionId] || {};
+      const botText = replyMap[group] || replyMap.neutral || replyMap.default;
+      const eff = cur.node.effects?.[optionId];
+      let nextNode = cur.node.next || cur.tree.root;
+      if (eff?.onPositiveOrNeutral && (group === "positive" || group === "neutral")) {
+        nextNode = eff.onPositiveOrNeutral;
+      }
+      if (eff?.setRelationship) this.applyDialogueEffect(fromId, toId, eff);
+      this.dialogueState[key] = nextNode;
+      return { playerText: opt.text, botText, ended: false };
+    }
+    return null;
+  }
+
+  applyDialogueEffect(fromId, toId, effect) {
+    if (effect.setRelationship) {
+      const { type, mutual } = effect.setRelationship;
+      const now = Date.now();
+      this.state[toId].relationship = { type, partnerId: fromId, mutual: !!mutual, hidden: false, lastChange: now };
+      if (mutual) {
+        this.state[fromId].relationship = { type, partnerId: toId, mutual: true, hidden: false, lastChange: now };
+      }
+    }
+  }
+
+  offscreenKey(a, b) { return [a, b].sort().join("_"); }
+
+  getOffscreenTree(a, b) { return OFFSCREEN_TREES[this.offscreenKey(a, b)] || null; }
+
+  tickOffscreenDialogues() {
+    Object.keys(OFFSCREEN_TREES).forEach(key => {
+      if (Math.random() > 0.35) return;
+      const tree = OFFSCREEN_TREES[key];
+      const nodeId = this.offscreenState[key] || tree.root;
+      const node = tree.nodes[nodeId];
+      if (!node) return;
+
+      if (node.initiatorPost) {
+        const initId = node.initiator;
+        if (!this.state[initId]?.online) return;
+        const group = moodGroup(this.state[initId]?.mood);
+        const text = node.initiatorPost[group] || node.initiatorPost.default;
+        if (!text) return;
+        this.addPost(initId, text);
+        this.offscreenState[key] = node.next || tree.root;
+      } else if (node.replies) {
+        const replierId = node.replier;
+        if (!this.state[replierId]?.online) return;
+        const group = moodGroup(this.state[replierId]?.mood);
+        const resp = node.replies[group] || node.replies.neutral;
+        if (!resp) return;
+        this.addPost(replierId, resp.text);
+        if (resp.relEffect) {
+          const otherId = Object.keys(this.relations).find(id =>
+            id !== replierId && this.offscreenKey(id, replierId) === key
+          );
+          if (otherId) this.relations[replierId][otherId] = resp.relEffect.type;
+        }
+        this.offscreenState[key] = resp.next || tree.root;
+      }
+    });
+  }
 }
 
 const engine = new BotEngine();
 
-// ДЕРЕВО СТОСУНКІВ ПЕРСОНАЖІВ
-// в constructor() додай:
-this.dialogueState = {}; // { "yani_akira": "start" }
-
-/** Чи є активне дерево для цієї пари (в будь-якому напрямку) */
-getActiveDialogueTree(fromId, toId) {
-  return DIALOGUE_TREES[`${fromId}_${toId}`] || null;
-}
-
-getDialogueKey(fromId, toId) {
-  return `${fromId}_${toId}`;
-}
-
-getCurrentDialogueNode(fromId, toId) {
-  const tree = this.getActiveDialogueTree(fromId, toId);
-  if (!tree) return null;
-  const key = this.getDialogueKey(fromId, toId);
-  const nodeId = this.dialogueState[key] || tree.root;
-  return { tree, node: tree.nodes[nodeId], nodeId };
-}
-
-/** Гравцю: які опції показати в quick-replies / кнопках вибору */
-getDialogueOptions(fromId, toId) {
-  const cur = this.getCurrentDialogueNode(fromId, toId);
-  if (!cur) return null;
-  if (cur.node.playerLine) {
-    return [{ id: cur.nodeId, text: cur.node.playerLine, kind: "line" }];
-  }
-  if (cur.node.responseOptions) {
-    return cur.node.responseOptions.map(o => ({ id: o.id, text: o.text, kind: "choice" }));
-  }
-  return null;
-}
-
-/** Гравець обрав репліку/варіант — повертає { playerText, botText, next } */
-resolveDialogueChoice(fromId, toId, optionId) {
-  const cur = this.getCurrentDialogueNode(fromId, toId);
-  if (!cur) return null;
-  const key = this.getDialogueKey(fromId, toId);
-  const group = moodGroup(this.state[toId]?.mood);
-
-  // Випадок 1: гравець обирає стартову репліку вузла (playerLine)
-  if (cur.node.playerLine && optionId === cur.nodeId) {
-    const resp = cur.node.responses[group] || cur.node.responses.default || cur.node.responses.neutral;
-    if (!resp) return null;
-    this.dialogueState[key] = resp.next || cur.tree.root;
-    return { playerText: cur.node.playerLine, botText: resp.text, ended: !resp.next };
-  }
-
-  // Випадок 2: гравець обирає один з responseOptions
-  if (cur.node.responseOptions) {
-    const opt = cur.node.responseOptions.find(o => o.id === optionId);
-    if (!opt) return null;
-    const replyMap = cur.node.botReplies[optionId] || {};
-    const botText = replyMap[group] || replyMap.neutral || replyMap.default;
-    this.dialogueState[key] = cur.node.next || cur.tree.root;
-    return { playerText: opt.text, botText, ended: false };
-  }
-  return null;
-}

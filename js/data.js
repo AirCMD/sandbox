@@ -734,3 +734,196 @@ const ACHIEVEMENTS = [
   { id: "gallery_fan", name: "Цінитель", desc: "Відкрий 3 роботи в галереї", emoji: "🖼", condition: "gallery", target: 3 },
   { id: "all_games", name: "Колекціонер ігор", desc: "Спробуй 4 різні ігри", emoji: "🎲", condition: "unique_games", target: 4 }
 ];
+
+/* =========================================================
+   ГРУПИ НАСТРОЮ (для дерев діалогів)
+   ========================================================= */
+const MOOD_GROUPS = {
+  закоханий: "positive", щасливий: "positive", веселий: "positive",
+  натхненний: "positive", творчий: "positive", соціальний: "positive", енергійний: "positive",
+  спокійний: "neutral", нейтральний: "neutral",
+  сумний: "sad",
+  злий: "angry", роздратований: "angry",
+  тривожний: "anxious", панічний: "anxious",
+  закритий: "closed", апатія: "closed", байдужий: "closed"
+};
+function moodGroup(mood) {
+  return MOOD_GROUPS[mood] || "neutral";
+}
+
+/* =========================================================
+   ДЕРЕВА ДІАЛОГІВ ГРАВЦЯ (Яні ↔ бот) — рендеряться в чаті
+   Ключ: "yani_<id>"
+   ========================================================= */
+const DIALOGUE_TREES = {
+
+  "yani_akira": {
+    root: "start",
+    nodes: {
+      start: {
+        playerLine: "Акіро, що між нами? Стосунки чи просто дружба?",
+        responses: {
+          angry:   { text: "Вибач, я сьогодні не в дусі щоб спілкуватись...", next: null },
+          closed:  { text: "Не зараз, добре? Не хочу зараз про це говорити.", next: null },
+          anxious: { text: "Ем... давай не зараз, я і так на нервах.", next: null },
+          sad:     { text: "Мені сьогодні трішки сумно. Скажи, чи можемо ми бути більше, ніж просто друзями?", next: "akira_sad_ask" },
+          neutral: { text: "Я й сам не знаю, а ти як думаєш?", next: "akira_unsure" },
+          positive:{ text: "Я й сам не знаю, а ти як думаєш?", next: "akira_unsure" }
+        }
+      },
+      akira_unsure: {
+        responseOptions: [
+          { id: "opt_relationship", text: "Ймовірно стосунки" },
+          { id: "opt_friendship",   text: "Ймовірно дружба" },
+          { id: "opt_dunno",        text: "Не знаю, ти мені скажи" }
+        ],
+        botReplies: {
+          opt_relationship: {
+            positive: "Знаєш... думаю, ти права. Мені подобається ця думка.",
+            neutral:  "Може й так. Мені треба подумати, але не проти.",
+            sad:      "Хотів би вірити в це, чесно.",
+            angry:    "Не зараз про це, добре?",
+            closed:   "Не знаю... не хочу зараз визначатись.",
+            anxious:  "Це... лякає трохи, якщо чесно."
+          },
+          opt_friendship: {
+            positive: "Ага, напевно ти маєш рацію. Дружба — це теж цінно.",
+            neutral:  "Мабуть, так простіше.",
+            sad:      "Може, й на краще, якщо чесно.",
+            angry:    "Добре, хай буде так.",
+            closed:   "Так, певно, дружба.",
+            anxious:  "Так безпечніше, напевно."
+          },
+          opt_dunno: {
+            positive: "Хах, добре, тоді я скажу: мені подобається бути з тобою частіше, ніж просто другом.",
+            neutral:  "Чесно — не знаю. Дай подумати.",
+            sad:      "Не тисни, будь ласка, я і сам розгублений.",
+            angry:    "Не в настрої гадати.",
+            closed:   "Не хочу зараз відповідати.",
+            anxious:  "Ем, а можна я подумаю трохи довше?"
+          }
+        },
+        // спецефект: якщо гравець обрав "стосунки" і бот у доброму гуморі — пропонуємо підтвердження
+        effects: {
+          opt_relationship: { onPositiveOrNeutral: "confirm_relationship" }
+        },
+        next: "start"
+      },
+      akira_sad_ask: {
+        responseOptions: [
+          { id: "opt_more",     text: "Я думаю ми значно більше, аніж просто друзі" },
+          { id: "opt_maybe",    text: "Цілком можливо" },
+          { id: "opt_unlikely", text: "Навряд чи" }
+        ],
+        botReplies: {
+          opt_more: {
+            positive: "Це... справді тепло чути. Дякую.",
+            sad:      "Мені стало трохи легше від цих слів.",
+            neutral:  "Приємно це чути, чесно.",
+            angry:    "Зараз важко в це повірити, вибач.",
+            closed:   "...дякую, що сказала.",
+            anxious:  "Хотілося б, щоб це було правдою."
+          },
+          opt_maybe: {
+            positive: "Гаразд, це вже непогано для початку 🙂",
+            sad:      "Хоч якась надія — вже добре.",
+            neutral:  "Ну що ж, подивимось.",
+            angry:    "Ок.", closed: "Розумію.", anxious: "Це... заспокоює трохи."
+          },
+          opt_unlikely: {
+            positive: "Ну що ж, дякую за чесність.",
+            sad:      "Ясно... дякую, що не брешеш хоча б.",
+            neutral:  "Зрозуміло.", angry: "Ок, зрозумів.", closed: "Добре.", anxious: "Гаразд, прийняв."
+          }
+        },
+        effects: {
+          opt_more: { onPositiveOrNeutral: "confirm_relationship" }
+        },
+        next: "start"
+      },
+      // Підтвердження офіційних стосунків
+      confirm_relationship: {
+        responseOptions: [
+          { id: "opt_yes_dating", text: "Тоді нехай ми офіційно зустрічаємось 💗" },
+          { id: "opt_not_yet",    text: "Ще не готова, але це вже щось" }
+        ],
+        botReplies: {
+          opt_yes_dating: {
+            positive: "Гаразд... тоді ми зустрічаємось. Це відчувається правильно.",
+            neutral:  "Добре, домовились.",
+            sad:      "Дякую, що не боїшся зробити цей крок.",
+            angry: "Ок.", closed: "...добре.", anxious: "Гаразд, я в грі."
+          },
+          opt_not_yet: {
+            positive: "Ок, не поспішаємо. Мені й так добре.",
+            neutral:  "Розумію, часу достатньо.",
+            sad: "Добре, почекаю.", angry: "Ок.", closed: "Розумію.", anxious: "Добре, без тиску."
+          }
+        },
+        effects: {
+          opt_yes_dating: { setRelationship: { type: "dating", mutual: true } }
+        },
+        next: "start"
+      },
+      // Пропозиція одруження — доступна лише якщо relationship.type === "dating"
+      propose_marriage: {
+        playerLine: "Акіро... я хочу, щоб ми були разом назавжди. Одружимось?",
+        requiresRelationship: "dating",
+        responses: {
+          positive: { text: "Так... так! Звісно, так! 💍", next: null, effect: { setRelationship: { type: "married", mutual: true } } },
+          neutral:  { text: "Ти серйозно?.. Дай мені хвилинку... Так, я згоден.", next: null, effect: { setRelationship: { type: "married", mutual: true } } },
+          sad:      { text: "Я... я розчулений. Так, хочу цього з тобою.", next: null, effect: { setRelationship: { type: "married", mutual: true } } },
+          angry:    { text: "Зараз не найкращий момент для такого питання, вибач.", next: null },
+          closed:   { text: "Мені треба побути на самоті з цією думкою... але я не проти в принципі.", next: null },
+          anxious:  { text: "Це... дуже раптово, я хвилююсь, дай подумати.", next: null }
+        }
+      }
+    }
+  }
+
+  // За цим шаблоном додаси інші пари "yani_jini", "yani_giki" тощо
+};
+
+/* =========================================================
+   ФОНОВІ ДЕРЕВА МІЖ ІНШИМИ ПЕРСОНАЖАМИ (не Яні)
+   Не рендеряться в чаті — виливаються в пости/коментарі/стосунки
+   Ключ: неспрямований, сортований по алфавіту id через "_"
+   ========================================================= */
+const OFFSCREEN_TREES = {
+  "derek_sayuri": {
+    root: "start",
+    // хто "ініціює" залежить від того, чий хід — обираємо випадково при запуску
+    nodes: {
+      start: {
+        initiatorPost: {
+          sad:     "Дерек... чому ти такий? Я ж просто хочу бути поруч 💗 @derek",
+          positive:"Сьогодні особливо тепло на душі... думаю про декого 💗",
+          neutral: "Іноді просто хочеться, щоб мене почули.",
+          default: "Знову думаю про те, що між нами могло б бути."
+        },
+        initiator: "sayuri",
+        next: "derek_reacts"
+      },
+      derek_reacts: {
+        replies: {
+          angry:   { text: "Ще раз: @sayuri, відчепись. Ти мене буквально бісиш. Це офіційна відмова.", relEffect: { type: "annoyed" }, next: "start" },
+          closed:  { text: "@sayuri не зараз. Просто не зараз.", next: "start" },
+          sad:     { text: "@sayuri я теж не в найкращому стані... вибач, що не можу дати більше.", next: "start" },
+          neutral: { text: "@sayuri давай без цього у стрічці, добре?", next: "start" },
+          positive:{ text: "@sayuri ти... насправді хороша людина. Не знаю, що сказати ще.", next: "softened" }
+        },
+        replier: "derek"
+      },
+      softened: {
+        initiatorPost: {
+          positive: "Він відповів... по-доброму. Може, є надія? 💗",
+          default:  "Він відповів тепліше, ніж зазвичай. Серце тьохнуло."
+        },
+        initiator: "sayuri",
+        next: "start",
+        effect: { setRelationshipIfMutualChance: 0.3, type: "complicated" }
+      }
+    }
+  }
+  // За тим самим шаблоном: "derek_kate", "kate_kent" тощо
+};

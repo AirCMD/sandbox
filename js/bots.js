@@ -1358,3 +1358,64 @@ class BotEngine {
 }
 
 const engine = new BotEngine();
+
+// ДЕРЕВО СТОСУНКІВ ПЕРСОНАЖІВ
+// в constructor() додай:
+this.dialogueState = {}; // { "yani_akira": "start" }
+
+/** Чи є активне дерево для цієї пари (в будь-якому напрямку) */
+getActiveDialogueTree(fromId, toId) {
+  return DIALOGUE_TREES[`${fromId}_${toId}`] || null;
+}
+
+getDialogueKey(fromId, toId) {
+  return `${fromId}_${toId}`;
+}
+
+getCurrentDialogueNode(fromId, toId) {
+  const tree = this.getActiveDialogueTree(fromId, toId);
+  if (!tree) return null;
+  const key = this.getDialogueKey(fromId, toId);
+  const nodeId = this.dialogueState[key] || tree.root;
+  return { tree, node: tree.nodes[nodeId], nodeId };
+}
+
+/** Гравцю: які опції показати в quick-replies / кнопках вибору */
+getDialogueOptions(fromId, toId) {
+  const cur = this.getCurrentDialogueNode(fromId, toId);
+  if (!cur) return null;
+  if (cur.node.playerLine) {
+    return [{ id: cur.nodeId, text: cur.node.playerLine, kind: "line" }];
+  }
+  if (cur.node.responseOptions) {
+    return cur.node.responseOptions.map(o => ({ id: o.id, text: o.text, kind: "choice" }));
+  }
+  return null;
+}
+
+/** Гравець обрав репліку/варіант — повертає { playerText, botText, next } */
+resolveDialogueChoice(fromId, toId, optionId) {
+  const cur = this.getCurrentDialogueNode(fromId, toId);
+  if (!cur) return null;
+  const key = this.getDialogueKey(fromId, toId);
+  const group = moodGroup(this.state[toId]?.mood);
+
+  // Випадок 1: гравець обирає стартову репліку вузла (playerLine)
+  if (cur.node.playerLine && optionId === cur.nodeId) {
+    const resp = cur.node.responses[group] || cur.node.responses.default || cur.node.responses.neutral;
+    if (!resp) return null;
+    this.dialogueState[key] = resp.next || cur.tree.root;
+    return { playerText: cur.node.playerLine, botText: resp.text, ended: !resp.next };
+  }
+
+  // Випадок 2: гравець обирає один з responseOptions
+  if (cur.node.responseOptions) {
+    const opt = cur.node.responseOptions.find(o => o.id === optionId);
+    if (!opt) return null;
+    const replyMap = cur.node.botReplies[optionId] || {};
+    const botText = replyMap[group] || replyMap.neutral || replyMap.default;
+    this.dialogueState[key] = cur.node.next || cur.tree.root;
+    return { playerText: opt.text, botText, ended: false };
+  }
+  return null;
+}

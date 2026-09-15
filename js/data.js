@@ -639,7 +639,7 @@ const SAMPLE_POSTS = [
 ];
 
 const GALLERY = [
-  { id: 1, author: "yani", emoji: "📓", desc: "Розворот блокнота зі стікерами", tags: ["стаціонерія", "стікери"] },
+  { id: 1, author: "yani", emoji: "📓", image: "https://blogger.googleusercontent.com/img/a/AVvXsEhTyb0qZmY95aWq6-RakR54gOYNpE9hEWR16cSyC1XoQEgwIXqo5vQ-PsEfa76HQVLXePooxZh9gZHVp06fZLNqN-OHXJxdXAEj0IJjrxPUXtFCO20FM63jRHEbE4-Vgn5qu7_inw74ZWajseRcLju5-E445F77V-orWlPr8ISSWq0c8BRMbODHxhNJKeM", desc: "То це вже побачення з Акірою?", tags: ["зимбачення", "стосункизакірою"] },
   { id: 2, author: "jini", emoji: "🍿", desc: "Сторінка журналу з пакетами від снеків", tags: ["колекція", "жарти"] },
   { id: 3, author: "sayuri", emoji: "🧸", desc: "Іграшка, яку зшила сама", tags: ["рукоділля", "іграшки"] },
   { id: 4, author: "giki", emoji: "🖥️", desc: "Скріншот нічного коду", tags: ["програмування", "ніч"] },

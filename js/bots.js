@@ -36,7 +36,24 @@ class BotEngine {
       gallery: 0,
       unique_games: new Set(),
       unlocked: new Set(),
-      profileVisited: new Set()
+      profileVisited: new Set(),
+      akira_meetings: 0,
+      akira_dating: 0,
+      akira_married: 0,
+      akira_first_step: 0,
+      akira_offline_date: 0,
+      akira_helper: 0
+    };
+    this.yaDayKey = null;
+    this.yaDayFlags = {
+      yaniStartUsed: false,
+      yaniAfterGreet: false,
+      akiraWave1: false,
+      akiraWave2: false,
+      akiraWave3: false,
+      akiraWave4Count: 0,
+      akiraRefusedOnce: false,
+      akiraInitiated: false
     };
     this.loadStats();
     this.init();
@@ -326,9 +343,21 @@ class BotEngine {
     return Infinity; // never
   }
 
+  pickMoodBiased(charId) {
+    const stage = (charId === "yani" || charId === "akira") ? this.yaStage() : "none";
+    const positive = ["закоханий", "щасливий", "веселий", "спокійний", "соціальний", "енергійний", "натхненний"];
+    if (stage === "married") {
+      if (Math.random() < 0.55) return positive[Math.floor(Math.random() * positive.length)];
+    } else if (stage === "dating") {
+      if (Math.random() < 0.5) return Math.random() < 0.45 ? "закоханий" : positive[Math.floor(Math.random() * positive.length)];
+    }
+    return MOODS[Math.floor(Math.random() * MOODS.length)];
+  }
+
   maybeChangeRelationship(charId) {
     const st = this.state[charId];
     if (!st?.relationship) return;
+    if (st.relationship.locked) return;
     const policy = st.relChangePolicy || "week";
     if (policy === "never") return;
     const elapsed = Date.now() - (st.relationship.lastChange || 0);
@@ -840,13 +869,14 @@ class BotEngine {
 
   /* ---- Месенджер ---- */
   getQuickReplies(fromId, toId) {
+    if (fromId === "yani" && toId === "akira" && typeof YA_CHAT !== "undefined") {
+      return this.getYaniAkiraReplies();
+    }
     const speaker = this.getCharacter(fromId);
     const gender = speaker?.gender || "f";
     const target = this.getCharacter(toId);
     const rel = this.getRelation(fromId, toId);
     const special = SPECIAL_DIALOGS[`${fromId}_${toId}`];
-
-    // Живі заготовки для гравця (не клони «як справи» у відповідь собі)
     let list = [
       "Привіт!",
       "Що в тебе нового?",
@@ -873,33 +903,160 @@ class BotEngine {
     return [...new Set(list.map(t => this.genderize(t, gender)))].slice(0, 6);
   }
 
+  getYaniAkiraReplies() {
+    this.yaEnsureDay();
+    const st = this.state.yani;
+    const mood = st?.mood || "спокійний";
+    const status = st?.status || "";
+    const stage = this.yaStage();
+    if (YA_CHAT.yaniBusyNoMsg.test(status) || /^сплю$/i.test(status)) {
+      return ["Як щодо зустрічі?", "Запрошую зустрітися"];
+    }
+    if (YA_CHAT.yaniSilentMoods.includes(mood)) return [];
+    const pack = YA_CHAT.yani[mood] || YA_CHAT.yani.спокійний;
+    if (!pack) return ["Що робиш?"];
+    const fill = (arr) => arr.map(t => t.replace(/\{status\}/g, status || "свої справи"));
+    if (this.yaIsNight()) return fill(this.yaPickPool(pack.night, stage)).slice(0, 6);
+    let list = [];
+    if (!this.yaDayFlags.yaniStartUsed) list = fill(this.yaPickPool(pack.start, stage));
+    else if (this.yaDayFlags.yaniAfterGreet) list = fill(this.yaPickPool(pack.afterGreet, stage));
+    list = [...list, ...fill(this.yaPickPool(pack.ongoing, stage))];
+    if (this.countAkiraMeetings() >= YA_MEETINGS_FOR_DATING && stage === "none") {
+      list.unshift("Акіро, що між нами? Стосунки чи просто дружба?");
+    }
+    if (this.countAkiraMeetings() >= YA_MEETINGS_FOR_MARRIAGE && stage === "dating") {
+      list.unshift("Акіро... я хочу, щоб ми були разом назавжди. Одружимось?");
+    }
+    return [...new Set(list)].filter(Boolean).slice(0, 8);
+  }
+
   botMayReply(fromId, toId, userMessage = "") {
     const st = this.state[toId];
     if (!st?.online) return { type: "offline" };
-
     const rel = this.getRelation(toId, fromId);
     if (rel === "blocked") return null;
-
+    if (toId === "akira" && fromId === "yani" && typeof YA_CHAT !== "undefined") {
+      return this.akiraMayReplyToYani(userMessage);
+    }
     const mood = st.mood;
     const gender = this.getCharacter(toId)?.gender || "f";
     const busy = this.isBusyStatus(st.status) && st.activityUntil > Date.now();
-
     if (["закритий", "апатія", "злий"].includes(mood) && Math.random() < 0.55) return { type: "ignore" };
     if (rel === "annoyed" && Math.random() < 0.7) return { type: "ignore" };
-
-    // Зайнятий (кіно, кафе…) — рідко відповідає, коротко
     if (busy && Math.random() < 0.55) return { type: "ignore" };
     if (busy && Math.random() < 0.35) return { type: "read_only" };
-
     if (!busy && Math.random() < 0.12) return { type: "read_only" };
     if (!busy && Math.random() < 0.08) return { type: "typing_then_cancel" };
-
-    const delay = busy
-      ? 4000 + Math.random() * 8000
-      : 1500 + Math.random() * 5000;
-
+    const delay = busy ? 4000 + Math.random() * 8000 : 1500 + Math.random() * 5000;
     let text = this.craftReply(toId, fromId, userMessage, { busy, rel, mood, gender });
     return { type: "reply", text, delay };
+  }
+
+  akiraMayReplyToYani(userMessage = "") {
+    this.yaEnsureDay();
+    const st = this.state.akira;
+    if (!st?.online) return { type: "offline" };
+    const mood = st.mood || "спокійний";
+    const status = st.status || "";
+    const stage = this.yaStage();
+    const msg = (userMessage || "").toLowerCase();
+    if (/^сплю$/i.test(status)) return { type: "offline" };
+    if (YA_CHAT.akiraBlindBusy.test(status) && !YA_CHAT.akiraSoftBusy.test(status)) return { type: "offline" };
+    if (YA_CHAT.akiraSoftBusy.test(status)) {
+      const soft = YA_CHAT.akira.softBusyReplies;
+      return {
+        type: "reply",
+        text: soft[Math.floor(Math.random() * soft.length)],
+        delay: 1500,
+        followUp: { text: this.craftAkiraReplyToYani(userMessage, mood, stage, status), delay: 4000 + Math.random() * 4000 }
+      };
+    }
+    if (["злий", "роздратований"].includes(mood)) {
+      if (!this.yaDayFlags.akiraRefusedOnce) {
+        this.yaDayFlags.akiraRefusedOnce = true;
+        return { type: "reply", text: "Вибач, сьогодні не в дусі. Пізніше.", delay: 2000 };
+      }
+      return { type: "read_only" };
+    }
+    if (mood === "закритий" && Math.random() < 0.6) {
+      return { type: "reply", text: "Не дуже хочу зараз про себе. Добре?", delay: 2000 + Math.random() * 2000 };
+    }
+    if (["апатія", "байдужий"].includes(mood)) {
+      if (Math.random() < 0.45) return { type: "typing_then_cancel" };
+      if (Math.random() < 0.35) return { type: "ignore" };
+    }
+    if (/стрім/i.test(status)) {
+      const sacrificePool = YA_CHAT.akira.sacrificeStream;
+      const canSacrifice = stage !== "none" || mood === "закоханий" || Math.random() > 0.55;
+      if (canSacrifice && sacrificePool[mood]) {
+        return { type: "reply", text: sacrificePool[mood], delay: 2000 + Math.random() * 2000 };
+      }
+      if (Math.random() < 0.5) return { type: "reply", text: "Зараз на стрімі, напишу як закінчу 🎮", delay: 2500 };
+      return { type: "read_only" };
+    }
+    if (/робот|техсмітник/i.test(status) && Math.random() < 0.4) {
+      return { type: "reply", text: "На роботі, відповім коротко або пізніше.", delay: 3000 };
+    }
+    const busy = this.isBusyStatus(status) && st.activityUntil > Date.now();
+    if (busy) {
+      const skipChance = stage === "married" ? 0.25 : stage === "dating" ? 0.4 : 0.6;
+      if (Math.random() < skipChance) return { type: "read_only" };
+    }
+    let text = this.craftAkiraReplyToYani(userMessage, mood, stage, status);
+    if (["тривожний", "панічний"].includes(mood)) {
+      text = text + (Math.random() > 0.5 ? " … трохи нервую." : " Серце б'ється швидше.");
+    }
+    if (/привіт|вітаю|геллоу|йо |як ти|як справи/i.test(msg)) {
+      this.yaDayFlags.yaniStartUsed = true;
+      this.yaDayFlags.yaniAfterGreet = true;
+    }
+    return { type: "reply", text, delay: busy ? 3500 + Math.random() * 5000 : 1200 + Math.random() * 3500 };
+  }
+
+  craftAkiraReplyToYani(userMessage, mood, stage, status) {
+    const msg = (userMessage || "").toLowerCase();
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    if (/що робиш|чим займаєш|що там/.test(msg)) return status ? `Зараз ${status}.` : "Потихеньку свої справи.";
+    if (/зустрі|пішли|побачен|прогул|кіно|кафе|велосипед|пляж/.test(msg)) {
+      if (["злий", "роздратований", "закритий"].includes(mood)) return "Не сьогодні.";
+      if (mood === "сумний") return pick(["Може, просто поруч побудемо?", "Можу прийти, якщо хочеш.", "Кіно в тиші — теж варіант."]);
+      const places = stage === "married" ? ["додому", "у наше кафе", "на стрім разом"] : ["в кінотеатр", "в кафе", "пограти онлайн", "в аніме-магазин"];
+      return pick([`Давай у «${pick(places)}»?`, "Можу. Коли ти вільна?", `Ок, запрошую в «${pick(places)}».`]);
+    }
+    if (/що між нами|стосунк|дружб/.test(msg)) {
+      if (this.countAkiraMeetings() < YA_MEETINGS_FOR_DATING) return "Ще рано про таке… давай більше часу разом.";
+      return pick(["Я й сам не знаю, а ти як думаєш?", "Мені з тобою добре. Може, більше ніж дружба?"]);
+    }
+    if (/одруж|шлюб|назавжди/.test(msg)) {
+      if (stage !== "dating" || this.countAkiraMeetings() < YA_MEETINGS_FOR_MARRIAGE) return "Це… серйозно. Дай нам ще трохи часу.";
+      return pick(["Ти серйозно?..", "Я… мені треба хвилинка."]);
+    }
+    if (/страшно|помремо|зла людина|лячно|тривожник|химерн|стікер|тамагоч|блокнот/.test(msg)) {
+      if (["злий", "роздратований", "закритий"].includes(mood)) return "Не можу зараз допомогти. Вибач.";
+      if (/помремо|страшно від думки/.test(msg) && this.countAkiraMeetings() >= 15 && stage === "none" && Math.random() > 0.5) {
+        this.track("akira_first_step");
+        return "Мені також, давай боятися разом? І тобі привіт.";
+      }
+      if (/зла людина|лячно|боюс виходити/.test(msg)) return "Якщо хочеш, можу прийти до тебе. Привіт.";
+      if (/грі|завдання|химерн|персонаж/.test(msg)) return "Ми можемо разом пройти ту гру, привіт. Зараз підключусь.";
+      if (/стікер|тамагоч|блокнот/.test(msg)) return "Ти шукала у шухляді, привіт? У мене точно немає. Якщо хочеш, можу допомогти з пошуками.";
+      return "Я тут. Дихай. Розкажи ще, якщо треба.";
+    }
+    if (/малюю|стікер|тамагоч|ліплю|намисто|альбом/.test(msg)) {
+      if (["злий", "роздратований", "закритий", "апатія"].includes(mood)) return "Не турбуй зараз, добре?";
+      return pick(["Хотілося б глянути. Зустрінемось?", "Хочу подивитися на твої малюнки, зустрінемось?", "Покажеш?"]);
+    }
+    if (/привіт|вітаю|геллоу|йо |як ти|як справи|як ся/.test(msg)) {
+      const greetPack = YA_CHAT.akira[mood]?.wave1 || YA_CHAT.akira.щасливий?.wave1 || ["Привіт. Я ок, а ти?"];
+      return pick(greetPack);
+    }
+    if (/сумн|боляче|так собі|сумую/.test(msg)) {
+      if (["щасливий", "веселий", "закоханий", "спокійний", "нейтральний"].includes(mood)) {
+        return pick(["Я тут. Обіймаю здалеку.", "Сумую разом з тобою, якщо треба.", "Може, просто помовчимо в чаті?"]);
+      }
+    }
+    if (status) return pick([`Ага. Я зараз ${status}.`, "Ок, зрозумів.", "Цікаво. Розказуй.", stage !== "none" ? "Радий, що пишеш 💗" : "Добре, що написала."]);
+    return pick(["Ага.", "Ок.", "Я тут.", "Зрозумів."]);
   }
 
   /** Людська відповідь за змістом повідомлення, без ехо-питань */
@@ -1147,6 +1304,102 @@ class BotEngine {
     this.gossipLog.push({ ...g, ts: Date.now() });
   }
 
+  /* ---- Яні ↔ Акіра helpers ---- */
+  yaEnsureDay() {
+    const d = new Date();
+    const key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    if (this.yaDayKey !== key) {
+      this.yaDayKey = key;
+      this.yaDayFlags = {
+        yaniStartUsed: false, yaniAfterGreet: false,
+        akiraWave1: false, akiraWave2: false, akiraWave3: false,
+        akiraWave4Count: 0, akiraRefusedOnce: false, akiraInitiated: false
+      };
+    }
+  }
+  yaStage() {
+    const a = this.state.akira?.relationship;
+    const y = this.state.yani?.relationship;
+    if (a?.type === "married" && a.partnerId === "yani") return "married";
+    if (y?.type === "married" && y.partnerId === "akira") return "married";
+    if (a?.type === "dating" && a.partnerId === "yani") return "dating";
+    if (y?.type === "dating" && y.partnerId === "akira") return "dating";
+    return "none";
+  }
+  yaIsNight() {
+    const h = new Date().getHours();
+    return h >= (YA_CHAT?.nightHourStart ?? 22) || h < (YA_CHAT?.nightHourEnd ?? 6);
+  }
+  yaPickPool(poolObj, stage) {
+    if (!poolObj) return [];
+    if (poolObj.all) return [...poolObj.all];
+    return [...(poolObj[stage] || poolObj.none || [])];
+  }
+  countAkiraMeetings() { return this.stats.akira_meetings || 0; }
+
+  onAkiraMeetingAccepted(meeting) {
+    this.stats.akira_meetings = (this.stats.akira_meetings || 0) + 1;
+    this.saveStats();
+    const n = this.stats.akira_meetings;
+    const place = meeting.place || "деінде";
+    const posts = [
+      { from: "yani", text: `Сьогодні з @akira були в «${place}». Добре провели час ✨` },
+      { from: "akira", text: `Побачення з @yani у «${place}». Варто було.` },
+      { from: "jini", text: `Ооо, @yani і @akira знову кудись ходили? «${place}»? 👀` }
+    ];
+    const p = posts[Math.floor(Math.random() * posts.length)];
+    setTimeout(() => this.addPost(p.from, p.text), 2000 + Math.random() * 3000);
+    ["yani", "akira"].forEach(id => {
+      const st = this.state[id];
+      if (!st || ["злий", "роздратований", "закритий", "апатія"].includes(st.mood)) return;
+      if (Math.random() > 0.35) {
+        st.mood = "закоханий";
+        st.thought = this.pickThought("закоханий", this.getCharacter(id)?.gender);
+      }
+    });
+    if (n >= YA_MEETINGS_FOR_DATING && this.yaStage() === "none" && Math.random() > 0.4) {
+      setTimeout(() => this.akiraProposeRelationship(), 5000 + Math.random() * 4000);
+    }
+  }
+
+  akiraProposeRelationship() {
+    if (this.yaStage() !== "none") return;
+    if (this.countAkiraMeetings() < YA_MEETINGS_FOR_DATING) return;
+    const key = ["yani", "akira"].sort().join("_");
+    if (!this.messages[key]) this.messages[key] = [];
+    this.messages[key].push({ from: "akira", text: "Яні... що між нами? Стосунки чи просто дружба? Я хочу знати.", read: true, ts: Date.now() });
+    this.track("akira_first_step");
+    if (typeof UI !== "undefined" && UI.currentChatId === "akira") {
+      try { UI.renderChatMessages(); UI.renderQuickReplies(); } catch (_) {}
+    }
+  }
+
+  lockYaRelationship(type) {
+    const now = Date.now();
+    this.state.yani.relationship = { type, partnerId: "akira", mutual: true, hidden: false, lastChange: now, locked: true };
+    this.state.akira.relationship = { type, partnerId: "yani", mutual: true, hidden: false, lastChange: now, locked: true };
+    if (type === "dating") {
+      this.stats.akira_dating = 1;
+      this.track("akira_dating");
+      setTimeout(() => {
+        this.addPost("yani", "Ми з @akira офіційно разом 💗");
+        setTimeout(() => this.addPost("akira", "Так. @yani і я зустрічаємось."), 3000);
+        setTimeout(() => this.addPost("jini", "СТОЙТЕ. @yani і @akira??? 🐰💘 Кажу ж, щось було!"), 6000);
+      }, 1500);
+    }
+    if (type === "married") {
+      this.stats.akira_married = 1;
+      this.track("akira_married");
+      setTimeout(() => {
+        this.addPost("yani", "Ми з @akira одружилися 💍 Назавжди.");
+        setTimeout(() => this.addPost("akira", "Дружина. @yani. Досі не вірю 💍"), 3500);
+        setTimeout(() => this.addPost("jini", "ВЕСТІНГ!!! @yani і @akira одружились 💒 Я плачу з щастя"), 7000);
+        setTimeout(() => this.addPost("cornel", "Офіційно: @akira тепер «зайнятий». Хто ставив проти — платіть."), 10000);
+      }, 1500);
+    }
+    this.saveStats();
+  }
+
   /* ---- Зустрічі ---- */
   proposeMeeting(fromId, toId) {
     const place = MEETUP_PLACES[Math.floor(Math.random() * MEETUP_PLACES.length)];
@@ -1156,11 +1409,17 @@ class BotEngine {
     setTimeout(() => {
       const rel = this.getRelation(toId, fromId);
       const mood = this.state[toId]?.mood;
+      const yaPair = (fromId === "yani" && toId === "akira") || (fromId === "akira" && toId === "yani");
+      const stage = this.yaStage();
+      let acceptChance = 0.65;
+      if (yaPair && stage === "dating") acceptChance = 0.82;
+      if (yaPair && stage === "married") acceptChance = 0.9;
       if (rel === "annoyed" || ["закритий", "злий", "апатія"].includes(mood)) {
         meeting.status = "declined";
-      } else if (Math.random() > 0.35) {
+      } else if (Math.random() < acceptChance) {
         meeting.status = "accepted";
         if (typeof UI !== "undefined" && fromId === UI.playerId) this.track("meetings_accepted");
+        if (yaPair) this.onAkiraMeetingAccepted(meeting);
       } else {
         meeting.status = "declined";
       }
@@ -1267,7 +1526,7 @@ class BotEngine {
           // (для гравця — частіше, щоб тема UI оновлювалась)
           const moodChance = isPlayer ? 0.35 : 0.12;
           if (Math.random() < moodChance) {
-            const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
+            const newMood = this.pickMoodBiased(c.id);
             if (st.mood !== newMood) {
               st.mood = newMood;
               st.thought = this.pickThought(newMood, c.gender);
@@ -1285,7 +1544,7 @@ class BotEngine {
             st.online = this.shouldBeOnline(c, act);
           }
           if (Math.random() > 0.7) {
-            const newMood = MOODS[Math.floor(Math.random() * MOODS.length)];
+            const newMood = this.pickMoodBiased(c.id);
             if (st.mood !== newMood) {
               st.mood = newMood;
               st.thought = this.pickThought(newMood, c.gender);
@@ -1299,11 +1558,13 @@ class BotEngine {
       this.tickOffscreenDialogues();
       if (Math.random() > 0.9 && this.state["sayuri"]?.online) this.maybeSayuriDerekDrama();
       if (Math.random() > 0.94) this.botsStartGame();
-      // рідка спроба змінити стосунки
       if (Math.random() > 0.88) {
         const cand = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
-        this.maybeChangeRelationship(cand.id);
+        if (!(cand.id === "yani" || cand.id === "akira") || !this.state[cand.id]?.relationship?.locked) {
+          this.maybeChangeRelationship(cand.id);
+        }
       }
+      if (Math.random() > 0.72) this.maybeAkiraInitiate();
 
       // Тема / профіль: оновлення UI
       if (typeof UI !== "undefined" && UI.playerId) {
@@ -1343,6 +1604,11 @@ class BotEngine {
   maybeAutoPost(playerId) {
     if (Math.random() > 0.35) return;
     const s = this.state[playerId];
+    if (!s) return;
+    if (playerId === "yani" && typeof YA_CHAT !== "undefined") {
+      if (YA_CHAT.yaniNoPostMoods.includes(s.mood)) return;
+      if (s.mood === "злий") { this.addPost(playerId, "Бісить усе. Не чіпайте."); return; }
+    }
     const texts = [
       s.thought,
       `Сьогодні я ${s.status}`,
@@ -1350,6 +1616,57 @@ class BotEngine {
       "Думаю про " + (this.getCharacter(playerId)?.interests[0] || "всяке")
     ];
     this.addPost(playerId, texts[Math.floor(Math.random() * texts.length)]);
+  }
+
+  maybeAkiraInitiate() {
+    if (typeof YA_CHAT === "undefined") return;
+    this.yaEnsureDay();
+    const st = this.state.akira;
+    if (!st?.online) return;
+    if (/^сплю$/i.test(st.status)) return;
+    if (YA_CHAT.akiraBlindBusy.test(st.status)) return;
+    const mood = st.mood;
+    const stage = this.yaStage();
+    const positive = ["закоханий", "щасливий", "веселий", "соціальний", "енергійний"].includes(mood);
+    if (!positive && stage === "none") return;
+    if (this.yaDayFlags.akiraInitiated && stage !== "married") return;
+    const key = ["yani", "akira"].sort().join("_");
+    if (!this.messages[key]) this.messages[key] = [];
+    let text = null;
+    if (this.yaIsNight() && Math.random() > 0.4) {
+      const night = YA_CHAT.akira.night;
+      const pool = night[stage] || night.none || [];
+      if (pool.length) text = pool[Math.floor(Math.random() * pool.length)];
+    } else if (mood === "закоханий") {
+      const pack = YA_CHAT.akira.закоханий;
+      if (!this.yaDayFlags.akiraWave1 && Math.random() > 0.5) {
+        text = pack.wave1[Math.floor(Math.random() * pack.wave1.length)];
+        this.yaDayFlags.akiraWave1 = true;
+      } else if (!this.yaDayFlags.akiraWave2 && Math.random() > 0.55) {
+        const w2 = pack.wave2[stage] || pack.wave2.none || [];
+        if (w2.length) { text = w2[Math.floor(Math.random() * w2.length)]; this.yaDayFlags.akiraWave2 = true; }
+      } else if (!this.yaDayFlags.akiraWave3 && Math.random() > 0.6) {
+        const w3 = pack.wave3[stage] || pack.wave3.none || [];
+        if (w3.length) { text = w3[Math.floor(Math.random() * w3.length)]; this.yaDayFlags.akiraWave3 = true; }
+      } else if (stage === "married" && this.yaDayFlags.akiraWave4Count < 5 && Math.random() > 0.5) {
+        const w4 = pack.wave4_married || [];
+        if (w4.length) { text = w4[Math.floor(Math.random() * w4.length)]; this.yaDayFlags.akiraWave4Count++; }
+      }
+    } else if (positive) {
+      const pack = YA_CHAT.akira[mood] || YA_CHAT.akira.щасливий;
+      if (pack?.wave1 && !this.yaDayFlags.akiraWave1) {
+        text = pack.wave1[Math.floor(Math.random() * pack.wave1.length)];
+        this.yaDayFlags.akiraWave1 = true;
+      } else if (pack?.wave2 && Math.random() > 0.5) {
+        text = pack.wave2[Math.floor(Math.random() * pack.wave2.length)];
+      }
+    }
+    if (!text) return;
+    this.yaDayFlags.akiraInitiated = true;
+    this.messages[key].push({ from: "akira", text, read: true, ts: Date.now() });
+    if (typeof UI !== "undefined" && UI.currentChatId === "akira") {
+      try { UI.renderChatMessages(); } catch (_) {}
+    }
   }
 
   searchCharacters(query) {
@@ -1374,7 +1691,13 @@ class BotEngine {
      ========================================================= */
 
   getActiveDialogueTree(fromId, toId) {
-    return DIALOGUE_TREES[`${fromId}_${toId}`] || null;
+    const tree = DIALOGUE_TREES[`${fromId}_${toId}`] || null;
+    if (!tree) return null;
+    if (tree.requiresMeetings && fromId === "yani" && toId === "akira") {
+      if (this.countAkiraMeetings() < tree.requiresMeetings) return null;
+      if (this.yaStage() === "married") return null;
+    }
+    return tree;
   }
 
   getCurrentDialogueNode(fromId, toId) {
@@ -1383,14 +1706,16 @@ class BotEngine {
     const key = `${fromId}_${toId}`;
     let nodeId = this.dialogueState[key] || tree.root;
     let node = tree.nodes[nodeId];
-
-    // Якщо вузол вимагає певний тип стосунків, а його ще нема — повертаємось у корінь
     if (node?.requiresRelationship) {
       const st = this.state[toId];
       if (st?.relationship?.type !== node.requiresRelationship) {
         nodeId = tree.root;
         node = tree.nodes[nodeId];
       }
+    }
+    if (node?.requiresMeetings && this.countAkiraMeetings() < node.requiresMeetings) {
+      nodeId = tree.root;
+      node = tree.nodes[nodeId];
     }
     return { tree, node, nodeId, key };
   }
@@ -1412,8 +1737,14 @@ class BotEngine {
     const tree = this.getActiveDialogueTree(fromId, toId);
     if (!tree) return [];
     const st = this.state[toId];
+    const meetings = this.countAkiraMeetings();
     return Object.entries(tree.nodes)
-      .filter(([id, n]) => n.requiresRelationship && st?.relationship?.type === n.requiresRelationship)
+      .filter(([id, n]) => {
+        if (!n.requiresRelationship) return false;
+        if (st?.relationship?.type !== n.requiresRelationship) return false;
+        if (n.requiresMeetings && meetings < n.requiresMeetings) return false;
+        return true;
+      })
       .map(([id, n]) => ({ id, text: n.playerLine }));
   }
 
@@ -1487,6 +1818,10 @@ class BotEngine {
   applyDialogueEffect(fromId, toId, effect) {
     if (effect.setRelationship) {
       const { type, mutual } = effect.setRelationship;
+      if (mutual && ((fromId === "yani" && toId === "akira") || (fromId === "akira" && toId === "yani")) && (type === "dating" || type === "married")) {
+        this.lockYaRelationship(type);
+        return;
+      }
       const now = Date.now();
       this.state[toId].relationship = { type, partnerId: fromId, mutual: !!mutual, hidden: false, lastChange: now };
       if (mutual) {

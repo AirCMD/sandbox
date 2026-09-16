@@ -666,13 +666,21 @@ const UI = {
     if (!engine.messages[key]) engine.messages[key] = [];
     engine.messages[key].push({ from: this.playerId, text, read: false, ts: Date.now() });
     engine.onPlayerMessage(this.playerId, this.currentChatId);
+
+    if (this.playerId === "yani" && this.currentChatId === "akira" && engine.yaDayFlags) {
+      engine.yaEnsureDay?.();
+      if (/привіт|вітаю|геллоу|йо |як ти|як справи|як ся/i.test(text)) {
+        engine.yaDayFlags.yaniStartUsed = true;
+      }
+    }
+
     this.renderChatMessages();
+    this.renderQuickReplies();
 
     const decision = engine.botMayReply(this.playerId, this.currentChatId, text);
     const box = document.getElementById("chat-messages");
     const name = engine.getCharacter(this.currentChatId)?.name?.split(" ")[0] || "";
 
-    // Офлайн — без набору і без відповіді
     if (!decision || decision.type === "offline") {
       const note = document.createElement("div");
       note.className = "msg system";
@@ -702,7 +710,6 @@ const UI = {
     }
 
     setTimeout(() => {
-      // Якщо за час набору вийшов з мережі — відповіді немає
       if (!engine.getState(this.currentChatId)?.online) {
         typing.remove();
         return;
@@ -712,6 +719,15 @@ const UI = {
       const last = engine.messages[key].filter(m => m.from === this.playerId).pop();
       if (last) last.read = true;
       this.renderChatMessages();
+      this.renderQuickReplies();
+      if (decision.followUp?.text) {
+        setTimeout(() => {
+          if (!engine.getState(this.currentChatId)?.online) return;
+          engine.messages[key].push({ from: this.currentChatId, text: decision.followUp.text, read: true, ts: Date.now() });
+          this.renderChatMessages();
+          this.renderQuickReplies();
+        }, decision.followUp.delay || 5000);
+      }
     }, decision.delay);
   },
 

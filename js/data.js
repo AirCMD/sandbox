@@ -637,15 +637,15 @@ const SAMPLE_POSTS = [
 
 const GALLERY = [
   { id: 1, author: "yani", emoji: "📓", image: "https://blogger.googleusercontent.com/img/a/AVvXsEhTyb0qZmY95aWq6-RakR54gOYNpE9hEWR16cSyC1XoQEgwIXqo5vQ-PsEfa76HQVLXePooxZh9gZHVp06fZLNqN-OHXJxdXAEj0IJjrxPUXtFCO20FM63jRHEbE4-Vgn5qu7_inw74ZWajseRcLju5-E445F77V-orWlPr8ISSWq0c8BRMbODHxhNJKeM", desc: "То це вже побачення з Акірою?", tags: ["зимбачення", "стосункизакірою"] },
-  { id: 2, author: "jini", emoji: "🍿", desc: "Сторінка журналу з пакетами від снеків", tags: ["колекція", "жарти"] },
-  { id: 3, author: "sayuri", emoji: "🧸", desc: "Іграшка, яку зшила сама", tags: ["рукоділля", "іграшки"] },
-  { id: 4, author: "giki", emoji: "🖥️", desc: "Скріншот нічного коду", tags: ["програмування", "ніч"] },
-  { id: 5, author: "akira", emoji: "🎧", desc: "Сетап для стріму", tags: ["ігри", "стрім"] },
-  { id: 6, author: "kate", emoji: "🏞️", desc: "Фото з подорожі біля коней", tags: ["подорожі", "коні"] },
-  { id: 7, author: "derek", emoji: "🌧️", desc: "Вікно під дощем", tags: ["настрій", "самотність"] },
-  { id: 8, author: "jura", emoji: "🎌", desc: "Частина колекції", tags: ["аніме", "колекція"] },
-  { id: 9, author: "kent", emoji: "🌅", desc: "Схід після пробіжки", tags: ["спорт", "ранок"] },
-  { id: 10, author: "cornel", emoji: "📦", desc: "Нова партія з барахолки", tags: ["продаж", "речі"] }
+  { id: 8, author: "jura", emoji: "🍿", image: "https://blogger.googleusercontent.com/img/a/AVvXsEj5kAKYGIpGCsuyCS89YnltqpMBtXH-8j9KlqGaC5zVggX7FSmv1gMEuby6DlsT-nh5ANih8-7wFWC5-bUqnefZWI64knqC2CG45TllUV521EBYXuMCCQtl3a0fbmY5U2xbNvxmna8UZ7w-1OEyBiWBJqTrxK6ldCv-LNXbrizQl_LhDYDjTp3Cof4Kv8E", desc: "Моя нова докі-докі", tags: ["колекція", "дакімакура"] },
+  { id: 2, author: "jini", emoji: "🧸", image: "https://blogger.googleusercontent.com/img/a/AVvXsEh7O9QHS-OpKcZw02-CHGY8oBYtny3m72Wzemy3CyqTnbuIrEYnPN1NenGVtfC4PMDK-QvabhpAfrp-c_NX_wr7v5bXiY-fPwiWvXJ149KgABgaf2-qSHyi2dG1LBGxRAWBAv3cMmcRrPi03LxNkdve8vAD8T8GWM-dWCAH_1wpgDR3DHjnwTzZAKfFb_c", desc: "На природі відпочиваю.", tags: ["природа", "звіролюдина"] },
+  { id: 8, author: "jura", emoji: "🖥️", image: "https://blogger.googleusercontent.com/img/a/AVvXsEhEzUVNr4G6oZS_t3Gp4uGkf-KZ-jg5Odp2VHUSs-fAy7zayaEOL5D2AvlUOX4py_qDy4tpbUDk8sjhzf6Vfg26XVEm_FFEHIbH-ggVLLBsSiAIDM5OAUq0H7apUEUjzoBSP6m-fIGLWsYFMtmrl3RpDKJMr4TO7i6BLEyZPIW2PzJtPGQ6DsaIdR8B7mw", desc: "Мої жінки мрії", tags: ["гарем", "жінкині"] },
+  { id: 2, author: "jini", emoji: "🎧", image: "https://blogger.googleusercontent.com/img/a/AVvXsEgjjtHiJpi0iKrw4r4yZn45OT0IDVU8SjYByyxbhKf6rYvuUVtbmPauUHIUzktN1NArf0kzy2nn-33UKc6Y4lPgvxt-GVOo-ochZz2A8IlWl4PUUepVDHAIZ0qUozbhZTjojMAiNcc9l-KZ0tFNgdoJvB34brUke5qHkj_oWqS20oBiDNNyDacngSGSKU8", desc: "Відпочинок з бесті", tags: ["бесті", "дружба"] },
+  { id: 5, author: "akira", emoji: "🏞️", image: "https://blogger.googleusercontent.com/img/a/AVvXsEifDJmwK8i6s316LVL00g3Y-qkoJO2MacdIOjnUipglD1asNptF_Q6xGaJgfQszPce2lvV-pscnmLk2pc-l_pytcB8vSS-SnRFV6kY36_U7PmvcqGNLG7ZY-7DqpGfgBPM6i2CtqpJbxFWv_q78LfybAZRo8paMbIFPHe9uOORE_22wI6ynNWEU-mquax4", desc: "Село 💕", tags: ["подорожі", "село"] },
+  { id: 3, author: "sayuri", emoji: "🌧️", image: "https://blogger.googleusercontent.com/img/a/AVvXsEhUWBVoySRN8Qsp_rIXgnWILjSVaEjGpLOrijL83Ucc72BUMwKDB5aP2E7g2lUDV3JJh-RqraL2nhhFpArhjYxnKQ1KOnkaVrNJAEQkGXXHHzMVykIEOGk2ZsN2HUo1HnQk4lI0OUyU5n7FGdnnt13Tt6uNkAU94LDp9Ak-EPjJGSBvZCe33hf5WFhE578", desc: "Разом з друзями в кіно", tags: ["настрій", "дружба"] },
+  { id: 6, author: "kate", emoji: "🎌", image: "https://blogger.googleusercontent.com/img/a/AVvXsEjAO2uVNGy-5d2CIexHmRvMD50wydS26gARecT7ZZlzb5GFgLkfYIW9WlNRgnVdZh9bNOUNiHNky8cGMdP_J3KAJ6d896ONNB3Z7Ga4PSpsAjwO2KnwXyIUOUIt4u94IzSiBjXEkadD2e_V2uu7-rhkkNpXlJDXS6EqFbAi5jnY3eQtTdGDPqJYlKUVnK4", desc: "Кохання", tags: ["кохання", "коні"] },
+  { id: 7, author: "derek", emoji: "🌅", image: "https://blogger.googleusercontent.com/img/a/AVvXsEhOKEDowrTmvUVcr9o7sz3O4G4nY6Ir9SwgOSYzbH7b9IBSwi7_EVYo_GJRDfcXF2GGgC_Ms7kaOpVB8m4Gio2TcUDxYlXyS_acRMMO1OUf6hQR4USYFgbiVGWccj7RhHGRqUMoV2eup_sxwYRXtg0lgllMRYl4r3j4RMp_xNiIe3pLQOYzI52I6a-PKKs", desc: "Для дурепи Саюрі", tags: ["гейт", "бісиш"] },
+  { id: 6, author: "kate", emoji: "📦", image: "https://blogger.googleusercontent.com/img/a/AVvXsEgwSOFzYXip2hexvATZzikvdHX8WuhUxNoDdV1LiUeILJGRHq8o_2irR8NRfQTN479NJji3Qrlo2x0IYy5vfX7nVwugwrXB2HCuKjgBTuDV64EaMKXVzbnO5MLnqwmvVlM4glc6ro2Cs5B0-IJ11w9I4ZH0ph2x0X1lrucVZQJw24DWgmQAPoXa140GxTk", desc: "Звірочмошниця", tags: ["квадроберка", "звіропуд"] }
 ];
 
 /* Розширені ігри */

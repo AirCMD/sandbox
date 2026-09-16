@@ -431,7 +431,7 @@ const UI = {
     };
   },
 
-renderGallery() {
+  renderGallery() {
     const grid = document.getElementById("gallery-grid");
     grid.innerHTML = "";
     GALLERY.forEach(item => {
@@ -603,7 +603,7 @@ renderGallery() {
     const dialogueOptions = engine.getDialogueOptions(this.playerId, this.currentChatId);
     const extras = engine.getExtraDialogueTriggers(this.playerId, this.currentChatId);
 
-    if (dialogueOptions || extras.length) {
+    if (dialogueOptions || (extras && extras.length)) {
       const all = [...(dialogueOptions || []), ...extras.map(e => ({ id: e.id, text: e.text, kind: "line" }))];
       container.innerHTML = all.map(o => `<button data-dopt="${o.id}">${this.escape(o.text)}</button>`).join("");
       container.onclick = (e) => {
@@ -621,6 +621,7 @@ renderGallery() {
     };
   },
 
+  /** Обробка вибору репліки/варіанту з дерева діалогів (Яні ↔ бот) */
   sendDialogueChoice(optionId) {
     const result = engine.resolveDialogueChoice(this.playerId, this.currentChatId, optionId);
     if (!result) return;
@@ -629,9 +630,29 @@ renderGallery() {
     engine.messages[key].push({ from: this.playerId, text: result.playerText, read: true, ts: Date.now() });
     this.renderChatMessages();
 
+    // Бот офлайн — системна нотатка, без відповіді; дерево не просувається
+    if (result.gated === "offline") {
+      const box = document.getElementById("chat-messages");
+      const note = document.createElement("div");
+      note.className = "msg system";
+      const name = engine.getCharacter(this.currentChatId)?.name?.split(" ")[0] || "";
+      note.textContent = name + " зараз не в мережі. Повідомлення чекатиме.";
+      box.appendChild(note);
+      box.scrollTop = box.scrollHeight;
+      return;
+    }
+
+    // Бот ігнорує (настрій) — тиша, дерево лишається на місці
+    if (result.gated === "ignore") {
+      return;
+    }
+
+    // Звичайна відповідь АБО "зайнятий, напишу пізніше"
     setTimeout(() => {
-      engine.messages[key].push({ from: this.currentChatId, text: result.botText, read: true, ts: Date.now() });
-      this.renderChatMessages();
+      if (result.botText) {
+        engine.messages[key].push({ from: this.currentChatId, text: result.botText, read: true, ts: Date.now() });
+        this.renderChatMessages();
+      }
       this.renderQuickReplies();
       if (this.viewingProfileId === this.currentChatId) {
         this.refreshBotProfileStatus(this.currentChatId);

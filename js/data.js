@@ -124,7 +124,7 @@ const CHARACTERS = [
     name: "Джині Мацумацу",
     gender: "f",
     emoji: "🐰",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgDlHI-zE-J5F_wErM8cZcvdUo3wU2eDFHtwuqBVcjhQ0gh_eLJv_x88zH6ZJ37-Q7JX2Ctug5R8J0tr0CSRPIaod6y4EAS4jcpOzWNZoDPqYzBXcGmsTSLSI5V_lF198LX5-gWojLFmygcPL1PBj4r6uETIAGlHgUSkUi38he-ShWsDbkKzl3h4CRjUsk", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgDlHI-zE-J5F_wErM8cZcvdUo3wU2eDFHtwuqBVcjhQ0gh_eLJv_x88zH6ZJ37-Q7JX2Ctug5R8J0tr0CSRPIaod6y4EAS4jcpOzWNZoDPqYzBXcGmsTSLSI5V_lF198LX5-gWojLFmygcPL1PBj4r6uETIAGlHgUSkUi38he-ShWsDbkKzl3h4CRjUsk",
     color: "#f5c542",
     bio: "Менеджерка магазину електронних іграшок. Жартує, колекціонує пакети з-під снеків, знає всі плітки.",
     interests: ["жарти", "сніки", "плітки", "іграшки", "кіно", "ігри"],
@@ -141,7 +141,7 @@ const CHARACTERS = [
     name: "Саюрі Кіт",
     gender: "f",
     emoji: "🎤",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEhZ86sfJyXVUZ5W_dGDHW9nTmM-ns3Nz0hzKDddBIT0nzTySpqHaX74g5T0ZROux6y_z1ih8pJlum0gttajbGmMI27KSwq6yl70vWpWzvrYcx_HF68U9Jo1B7tKRvoRxGODaP2kPxgPG8fj1TWrxkv3jqQi25w7TAx9BGQ_No6seVQSxKrufXybZ_d4s7k", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEhZ86sfJyXVUZ5W_dGDHW9nTmM-ns3Nz0hzKDddBIT0nzTySpqHaX74g5T0ZROux6y_z1ih8pJlum0gttajbGmMI27KSwq6yl70vWpWzvrYcx_HF68U9Jo1B7tKRvoRxGODaP2kPxgPG8fj1TWrxkv3jqQi25w7TAx9BGQ_No6seVQSxKrufXybZ_d4s7k",
     color: "#c39bd3",
     bio: "Закохана в Дерека К'ю. Співає, створює іграшки. Часто сумує, але живе у фантазіях, що почуття взаємні.",
     interests: ["спів", "іграшки", "мрії", "романтика", "рукоділля"],
@@ -158,7 +158,7 @@ const CHARACTERS = [
     name: "Кейт Чан",
     gender: "f",
     emoji: "🐴",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjRpkjrxbFQPsjAFMo2CtJ_jek6IutY9NkWSl0mMRpqRv9TUSW8EEgYaBcbsL0ApzDYQRj7rRyWRUZPGScps8s_2LpvyuugRC3YmMHLStj5qSU0EtYZa2LCVvag4JP-c0jVxQJJZ3syKFux0lWNlkrhKFJv-hQZ9m3vvHuOOQW0PB5-z0WeEoUMC-d1Hfg", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjRpkjrxbFQPsjAFMo2CtJ_jek6IutY9NkWSl0mMRpqRv9TUSW8EEgYaBcbsL0ApzDYQRj7rRyWRUZPGScps8s_2LpvyuugRC3YmMHLStj5qSU0EtYZa2LCVvag4JP-c0jVxQJJZ3syKFux0lWNlkrhKFJv-hQZ9m3vvHuOOQW0PB5-z0WeEoUMC-d1Hfg",
     color: "#58d68d",
     bio: "Соціально активна. Кінний спорт, постійні подорожі. Відкрита, але вибіркова у близьких стосунках.",
     interests: ["кінний спорт", "подорожі", "фото", "активний відпочинок"],
@@ -175,7 +175,7 @@ const CHARACTERS = [
     name: "Гікі Коморі",
     gender: "f",
     emoji: "🌙",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjiq7A_eRnCAcq_XyFNES-nu4B2EzG5OB4Vl2_v2O0lDEBxCuTPhjUoVbxil5tVfBtANJIN1gSY8gpO-QidE0Ne2Q6p_CsEtdvE5wpZZMvE0ns7FsTS9WM68mKGe9UOhIX3lMT6f1ajuxObIiF8d_SvnF8An-Cslbr9QbclwmfkmBaF4x2ZXTN2SgRizOk", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjiq7A_eRnCAcq_XyFNES-nu4B2EzG5OB4Vl2_v2O0lDEBxCuTPhjUoVbxil5tVfBtANJIN1gSY8gpO-QidE0Ne2Q6p_CsEtdvE5wpZZMvE0ns7FsTS9WM68mKGe9UOhIX3lMT6f1ajuxObIiF8d_SvnF8An-Cslbr9QbclwmfkmBaF4x2ZXTN2SgRizOk",
     color: "#5dade2",
     bio: "Сидить вночі в інтернеті. Скромна, дуже розумна. Програми, відеоігри, малювання. Інколи глибоко сумує.",
     interests: ["програмування", "відеоігри", "малювання", "ніч", "тиша"],
@@ -192,7 +192,7 @@ const CHARACTERS = [
     name: "Акіра Бакенеко",
     gender: "m",
     emoji: "🎮",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEg6TLuKwTa6G7t32SgZE9RiJp5vLqOOqtC7lBHiLXIjBZOZAx1Dku1fWM8x_bc1lXwA1pF32pojhJW02L1BxI3oJfuvwBhC6i9Di0zPVQhzLcGslTae08Qe-4bRNEtHajGweOmDs9Snij-8QDCseC7KCckbjuGosEilTW3y2LxVSfdQ0WRgCTtt8us3ahI", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEg6TLuKwTa6G7t32SgZE9RiJp5vLqOOqtC7lBHiLXIjBZOZAx1Dku1fWM8x_bc1lXwA1pF32pojhJW02L1BxI3oJfuvwBhC6i9Di0zPVQhzLcGslTae08Qe-4bRNEtHajGweOmDs9Snij-8QDCseC7KCckbjuGosEilTW3y2LxVSfdQ0WRgCTtt8us3ahI",
     color: "#e74c3c",
     bio: "Продавець-консультант у «Техсмітнику». Відеоігри, фастфуд, стрімери. Має 5 улюблених стрімерів.",
     interests: ["відеоігри", "фастфуд", "стріми", "техніка", "меми"],
@@ -209,7 +209,7 @@ const CHARACTERS = [
     name: "Корнел Вус",
     gender: "m",
     emoji: "📦",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEiWYzjeUTFiYOn6la_I85bW21t8ce-aUt0RSS-D20N2sAi-R5__k0rkL51aECpvgUYS1nCg3bdFCbFawuVCtQW6HV4uRkxZJGxtbTzU_7lgq6iScgEnK-_ITRNmrevbnRptW-Rwo-G6HomYW4z_i0tOh3UA2MgZ_ADhKKtcczKJygPDAYwCmdj9ILDiBsQ", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEiWYzjeUTFiYOn6la_I85bW21t8ce-aUt0RSS-D20N2sAi-R5__k0rkL51aECpvgUYS1nCg3bdFCbFawuVCtQW6HV4uRkxZJGxtbTzU_7lgq6iScgEnK-_ITRNmrevbnRptW-Rwo-G6HomYW4z_i0tOh3UA2MgZ_ADhKKtcczKJygPDAYwCmdj9ILDiBsQ",
     color: "#af7ac5",
     bio: "Продає речі з барахолки. Мріє про бізнес. Хитрий, але хитрість часто виходить боком. Любить плітки.",
     interests: ["продажі", "барахолка", "плітки", "гроші", "схеми"],
@@ -226,7 +226,7 @@ const CHARACTERS = [
     name: "Дерек К'ю",
     gender: "m",
     emoji: "😤",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgsM4rOwDNDtCqV59OJ5ys0cO56LnF3H8mFm0sbR7DI6WYqtKoITHYS-1c-8uGtoY-Gf0IEwxKYqXv-ULsD5Dpbv96-vQqTMR1H7AtYpDHP76JP5NZgnz_AXaIXdgJQiLny8p3jaWbIZyVttS7jvfZn7uVK5JXQ7TUJDV6aE2kQY_bcUlwa4-KI9efOZYQ", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgsM4rOwDNDtCqV59OJ5ys0cO56LnF3H8mFm0sbR7DI6WYqtKoITHYS-1c-8uGtoY-Gf0IEwxKYqXv-ULsD5Dpbv96-vQqTMR1H7AtYpDHP76JP5NZgnz_AXaIXdgJQiLny8p3jaWbIZyVttS7jvfZn7uVK5JXQ7TUJDV6aE2kQY_bcUlwa4-KI9efOZYQ",
     color: "#ec7063",
     bio: "Емоційно нестабільний. Вважає, що дівчата його не розуміють. Подобається Кейт, яка ставиться байдуже. Саюрі його бісить.",
     interests: ["музика", "самотність", "скарги", "нічні роздуми"],
@@ -243,7 +243,7 @@ const CHARACTERS = [
     name: "Кент Уайт",
     gender: "m",
     emoji: "🏃",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgSYk5a8B6aEPqG-ZggBwwvEJrY4fF_5I2rXYWSsFJdIfx9q_kqID2YVDWIxFWc7KDHzRCQabJrr-zcbvS4u6ogVO1N1sjLO-3GgBw-zSht-LZTbRnF8-DLjOgQnOzDxNl96wbpkOZd30S_VEy2jUuUXZKM8SPngwUcA1PBqCg3vPRJWJmE95i3EIlC8Mc", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgSYk5a8B6aEPqG-ZggBwwvEJrY4fF_5I2rXYWSsFJdIfx9q_kqID2YVDWIxFWc7KDHzRCQabJrr-zcbvS4u6ogVO1N1sjLO-3GgBw-zSht-LZTbRnF8-DLjOgQnOzDxNl96wbpkOZd30S_VEy2jUuUXZKM8SPngwUcA1PBqCg3vPRJWJmE95i3EIlC8Mc",
     color: "#58d68d",
     bio: "Спорт, біг. Має багато спільного з Кейт Чан. Прямий, дисциплінований.",
     interests: ["біг", "спорт", "здоров'я", "ранкові тренування"],
@@ -260,7 +260,7 @@ const CHARACTERS = [
     name: "Джура Кун",
     gender: "m",
     emoji: "🎌",
-    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjHK3k31Cz91TRpdMLVDHdhvrjQaShImHKQpSpsoMf-QfgE_gA-ircDb81ZLT8HkH4hfLA0Se1GVddAFC0i-PSsqNt4xQTpt9OmFJ3t8zVwRKaRMp6bLYu1mKsG6Dm5UD9wd13f39_Zkvjs9BNdk91OIJfDw7d4gYUK-FC-IFOkZQtSPTQKDTdqv-p43H8", // URL: "https://..."
+    avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEjHK3k31Cz91TRpdMLVDHdhvrjQaShImHKQpSpsoMf-QfgE_gA-ircDb81ZLT8HkH4hfLA0Se1GVddAFC0i-PSsqNt4xQTpt9OmFJ3t8zVwRKaRMp6bLYu1mKsG6Dm5UD9wd13f39_Zkvjs9BNdk91OIJfDw7d4gYUK-FC-IFOkZQtSPTQKDTdqv-p43H8",
     color: "#bb8fce",
     bio: "Сидить вночі в інтернеті. Аніме, лолі-тематика, колекціонує дакімакури. Трохи дивний, але тихий.",
     interests: ["аніме", "дакімакури", "нічні форуми", "колекціонування"],
@@ -321,7 +321,7 @@ const QUICK_MESSAGES = {
   }
 };
 
-/* Спеціальні діалоги між конкретними парами */
+/* Спеціальні діалоги між конкретними парами (запасний пул реплік для чату) */
 const SPECIAL_DIALOGS = {
   "yani_jini": [
     "Джині, нова партія стікерів зайшла ✨",
@@ -461,7 +461,6 @@ const RELATIONSHIP_TYPES = {
     labelM: "У стосунках",
     needsPartner: true,
     needsMutual: true,
-    // може з будь-ким
     partnerPool: null
   },
   married: {
@@ -479,7 +478,6 @@ const RELATIONSHIP_TYPES = {
     needsPartner: true,
     needsMutual: true,
     partnerPool: ["jura", "derek", "kent", "cornel", "jini", "kate"],
-    // хто сам ніколи не обере цей статус
     neverChooser: ["giki", "yani", "akira", "sayuri"]
   },
   open: {
@@ -488,7 +486,6 @@ const RELATIONSHIP_TYPES = {
     labelM: "У вільному дурдомі",
     needsPartner: true,
     needsMutual: false,
-    // хто може обрати такий статус
     chooserPool: ["derek", "jura"],
     partnerPool: null
   },
@@ -736,8 +733,10 @@ const ACHIEVEMENTS = [
 ];
 
 /* =========================================================
-   ГРУПИ НАСТРОЮ (для дерев діалогів)
+   СИСТЕМА ДЕРЕВ ДІАЛОГІВ
    ========================================================= */
+
+/* ---- Групи настрою для дерев діалогів ---- */
 const MOOD_GROUPS = {
   закоханий: "positive", щасливий: "positive", веселий: "positive",
   натхненний: "positive", творчий: "positive", соціальний: "positive", енергійний: "positive",
@@ -803,7 +802,6 @@ const DIALOGUE_TREES = {
             anxious:  "Ем, а можна я подумаю трохи довше?"
           }
         },
-        // спецефект: якщо гравець обрав "стосунки" і бот у доброму гуморі — пропонуємо підтвердження
         effects: {
           opt_relationship: { onPositiveOrNeutral: "confirm_relationship" }
         },
@@ -841,7 +839,6 @@ const DIALOGUE_TREES = {
         },
         next: "start"
       },
-      // Підтвердження офіційних стосунків
       confirm_relationship: {
         responseOptions: [
           { id: "opt_yes_dating", text: "Тоді нехай ми офіційно зустрічаємось 💗" },
@@ -865,7 +862,6 @@ const DIALOGUE_TREES = {
         },
         next: "start"
       },
-      // Пропозиція одруження — доступна лише якщо relationship.type === "dating"
       propose_marriage: {
         playerLine: "Акіро... я хочу, щоб ми були разом назавжди. Одружимось?",
         requiresRelationship: "dating",
@@ -892,7 +888,6 @@ const DIALOGUE_TREES = {
 const OFFSCREEN_TREES = {
   "derek_sayuri": {
     root: "start",
-    // хто "ініціює" залежить від того, чий хід — обираємо випадково при запуску
     nodes: {
       start: {
         initiatorPost: {

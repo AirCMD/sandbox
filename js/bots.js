@@ -13,8 +13,8 @@ class BotEngine {
     this.meetings = [];
     this.activeGames = [];
     this.gossipLog = [];
-    this.dialogueState = {};          // { "yani_akira": "start" }
-    this.offscreenState = {};         // { "derek_sayuri": "start" }
+    this.dialogueState = {};   // { "yani_akira": "start" } — стан дерев діалогів Яні↔бот
+    this.offscreenState = {};  // { "derek_sayuri": "start" } — стан фонових дерев бот↔бот
     // Лайки галереї: { itemId: Set of userIds }
     this.galleryLikes = {};
     this.galleryComments = {};
@@ -934,6 +934,16 @@ class BotEngine {
       if (/сплю|душ|ванн/i.test(status)) {
         return pick(["Зараз не можу", "Напишу як звільнюсь"]);
       }
+      if (/стрім/i.test(status)) {
+        return pick([
+          `Зараз на стрімі, напишу як закінчу${left ? " (" + left + ")" : ""} 🎮`,
+          "В ефірі, не можу зараз повністю переключитись. Скоро!",
+          "Стрім іде, глядачі бачать все 😅 Пізніше нормально відпишу."
+        ]);
+      }
+      if (/тренуванн/i.test(status)) {
+        return pick(["На тренуванні зараз, відпишу після.", "Руки зайняті, напишу трохи згодом."]);
+      }
       return pick([
         `Зараз «${status}», відповім пізніше`,
         "Трішки зайнятий/зайнята. Не ігнорую навмисно."
@@ -1358,7 +1368,12 @@ class BotEngine {
     const q = query.toLowerCase();
     return this.posts.filter(p => p.text.toLowerCase().includes(q));
   }
-    getActiveDialogueTree(fromId, toId) {
+
+  /* =========================================================
+     ДЕРЕВА ДІАЛОГІВ — Яні ↔ бот (видимі чати)
+     ========================================================= */
+
+  getActiveDialogueTree(fromId, toId) {
     return DIALOGUE_TREES[`${fromId}_${toId}`] || null;
   }
 
@@ -1368,6 +1383,8 @@ class BotEngine {
     const key = `${fromId}_${toId}`;
     let nodeId = this.dialogueState[key] || tree.root;
     let node = tree.nodes[nodeId];
+
+    // Якщо вузол вимагає певний тип стосунків, а його ще нема — повертаємось у корінь
     if (node?.requiresRelationship) {
       const st = this.state[toId];
       if (st?.relationship?.type !== node.requiresRelationship) {
@@ -1390,6 +1407,7 @@ class BotEngine {
     return null;
   }
 
+  /** Чи доступна спеціальна репліка-пропозиція (напр. шлюб) окремою кнопкою */
   getExtraDialogueTriggers(fromId, toId) {
     const tree = this.getActiveDialogueTree(fromId, toId);
     if (!tree) return [];
@@ -1399,23 +1417,59 @@ class BotEngine {
       .map(([id, n]) => ({ id, text: n.playerLine }));
   }
 
+  /** Перевірка доступності бота (зайнятість/онлайн/настрій) перед прогресом дерева */
+  checkDialogueAvailability(toId) {
+    const st = this.state[toId];
+    if (!st?.online) return { type: "offline" };
+    const busy = this.isBusyStatus(st.status) && st.activityUntil > Date.now();
+    if (busy) return { type: "busy" };
+    const mood = st.mood;
+    if (["закритий", "апатія", "злий"].includes(mood) && Math.random() < 0.55) return { type: "ignore" };
+    return { type: "ok" };
+  }
+
   resolveDialogueChoice(fromId, toId, optionId) {
     const cur = this.getCurrentDialogueNode(fromId, toId);
     if (!cur?.node) return null;
+
+    // Текст репліки гравця дістаємо одразу, незалежно від доступності бота
+    let playerText = null;
+    if (cur.node.playerLine && optionId === cur.nodeId) {
+      playerText = cur.node.playerLine;
+    } else if (cur.node.responseOptions) {
+      const opt = cur.node.responseOptions.find(o => o.id === optionId);
+      if (!opt) return null;
+      playerText = opt.text;
+    } else {
+      return null;
+    }
+
+    // Перевірка доступності бота — так само як у звичайному чаті
+    const gate = this.checkDialogueAvailability(toId);
+    if (gate.type !== "ok") {
+      const gender = this.getCharacter(toId)?.gender || "f";
+      const rel = this.getRelation(toId, fromId);
+      const mood = this.state[toId]?.mood;
+      let botText = null;
+      if (gate.type === "busy") {
+        botText = this.craftReply(toId, fromId, "", { busy: true, rel, mood, gender });
+      }
+      // офлайн / ignore — без відповіді; стан дерева НЕ просуваємо, спробує пізніше
+      return { playerText, botText, ended: false, gated: gate.type };
+    }
+
     const group = moodGroup(this.state[toId]?.mood);
     const key = cur.key;
 
-    if (cur.node.playerLine && (optionId === cur.nodeId)) {
+    if (cur.node.playerLine && optionId === cur.nodeId) {
       const resp = cur.node.responses[group] || cur.node.responses.neutral;
       if (!resp) return null;
       if (resp.effect) this.applyDialogueEffect(fromId, toId, resp.effect);
       this.dialogueState[key] = resp.next || cur.tree.root;
-      return { playerText: cur.node.playerLine, botText: resp.text, ended: !resp.next };
+      return { playerText, botText: resp.text, ended: !resp.next };
     }
 
     if (cur.node.responseOptions) {
-      const opt = cur.node.responseOptions.find(o => o.id === optionId);
-      if (!opt) return null;
       const replyMap = cur.node.botReplies[optionId] || {};
       const botText = replyMap[group] || replyMap.neutral || replyMap.default;
       const eff = cur.node.effects?.[optionId];
@@ -1425,7 +1479,7 @@ class BotEngine {
       }
       if (eff?.setRelationship) this.applyDialogueEffect(fromId, toId, eff);
       this.dialogueState[key] = nextNode;
-      return { playerText: opt.text, botText, ended: false };
+      return { playerText, botText, ended: false };
     }
     return null;
   }
@@ -1441,13 +1495,19 @@ class BotEngine {
     }
   }
 
+  /* =========================================================
+     ФОНОВІ ДЕРЕВА — бот ↔ бот (невидимі в чаті)
+     ========================================================= */
+
   offscreenKey(a, b) { return [a, b].sort().join("_"); }
 
   getOffscreenTree(a, b) { return OFFSCREEN_TREES[this.offscreenKey(a, b)] || null; }
 
+  /** Викликається періодично з scheduleTicks для активних фонових пар */
   tickOffscreenDialogues() {
+    if (typeof OFFSCREEN_TREES === "undefined") return;
     Object.keys(OFFSCREEN_TREES).forEach(key => {
-      if (Math.random() > 0.35) return;
+      if (Math.random() > 0.35) return; // не кожен тік
       const tree = OFFSCREEN_TREES[key];
       const nodeId = this.offscreenState[key] || tree.root;
       const node = tree.nodes[nodeId];
@@ -1481,4 +1541,3 @@ class BotEngine {
 }
 
 const engine = new BotEngine();
-

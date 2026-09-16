@@ -937,16 +937,20 @@ class BotEngine {
     if (YA_CHAT.yaniSilentMoods.includes(mood)) return [];
     const pack = YA_CHAT.yani[mood] || YA_CHAT.yani.спокійний;
     if (!pack) return ["Що робиш?"];
-    const fill = (arr) => arr.map(t => t.replace(/\{status\}/g, status || "свої справи"));
+    const fill = (arr) => this.yaFilterLinesForStage(
+      arr.map(t => t.replace(/\{status\}/g, status || "свої справи")),
+      stage
+    );
     if (this.yaIsNight()) return fill(this.yaPickPool(pack.night, stage)).slice(0, 6);
     let list = [];
     if (!this.yaDayFlags.yaniStartUsed) list = fill(this.yaPickPool(pack.start, stage));
     else if (this.yaDayFlags.yaniAfterGreet) list = fill(this.yaPickPool(pack.afterGreet, stage));
     list = [...list, ...fill(this.yaPickPool(pack.ongoing, stage))];
-    if (this.countAkiraMeetings() >= YA_MEETINGS_FOR_DATING && stage === "none") {
+    /* Гілкові кнопки — лише після порогу */
+    if (this.yaCanProposeDating()) {
       list.unshift("Акіро, що між нами? Стосунки чи просто дружба?");
     }
-    if (this.countAkiraMeetings() >= YA_MEETINGS_FOR_MARRIAGE && stage === "dating") {
+    if (this.yaCanProposeMarriage()) {
       list.unshift("Акіро... я хочу, щоб ми були разом назавжди. Одружимось?");
     }
     return [...new Set(list)].filter(Boolean).slice(0, 8);
@@ -980,14 +984,20 @@ class BotEngine {
     return /приємних\s*снів|солодких\s*снів|добраніч|доброї\s*ночі|до\s*завтра|до\s*зустрічі|чудової\s*ночі|приємної\s*ночі|йду\s*спати|час\s*спати|лягаю|надобраніч/i.test(m);
   }
 
-  /** Чисте вітання (не частина довгої репліки) — щоб відповіді не ставали «хвилею» */
+  /** Вітання / «як справи» — без \b (кирилиця ламає word-boundary у JS) */
   isYaniGreetingMsg(msg) {
-    const m = (msg || "").toLowerCase().trim();
+    const m = (msg || "").toLowerCase().trim()
+      .replace(/[❤💗🥰😘😊😋💕]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!m) return false;
     if (this.isYaniGoodnightMsg(m)) return false;
-    // коротке вітання на початку, без іншої теми
-    return /^(привіт|привітики|вітаю|геллоу|гелло|хеллоу|йо|хай)\b/.test(m)
-      || /^(привіт|вітаю|йо).{0,8}(як ти|як справи|як ся|ти як)\b/.test(m)
-      || /^(як ти|як справи|як ся маєш|ти як)\??$/.test(m);
+    const howAre = /(?:^|[\s,])(?:як\s*(?:ти|справи|ся|воно|почуваєш(?:ся)?|життя|настрій|сьогодні)|ти\s*як|шо\s*як|що\s*як)(?:\s|[?!.…,]|$)/;
+    const hi = /^(?:привіт(?:ики)?|вітаю|геллоу|гелло|хеллоу|йо|хай|здоро(?:в)?)(?:\s|[!?,.…:]|$)/;
+    if (hi.test(m) && (m.length <= 56 || howAre.test(m))) return true;
+    if (howAre.test(m) && m.length <= 64) return true;
+    if (/^(?:як\s*(?:ти|справи|ся\s*маєш|почуваєш(?:ся)?|воно)|ти\s*як)(?:\s|[?!.…,]|$)/.test(m)) return true;
+    return false;
   }
 
   akiraGoodnightReply(stage) {
@@ -1095,11 +1105,50 @@ class BotEngine {
     return { type: "reply", text, delay: busy ? 3500 + Math.random() * 5000 : 1200 + Math.random() * 3500 };
   }
 
-  craftAkiraReplyToYani(userMessage, mood, stage, status) {
+  akiraGreetingReply(mood, stage, status) {
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const fromWave = (typeof YA_CHAT !== "undefined") && (YA_CHAT.akira[mood]?.wave1 || YA_CHAT.akira.щасливий?.wave1);
+    if (fromWave && fromWave.length) return pick(fromWave);
+    const byMood = {
+      закоханий: [
+        "Привіт! Я гарно почуваюся, а ти?",
+        "Вітаю. Добре, а ти як?",
+        "Гей, приємно тебе читати. Я? Чудово, а ти як?"
+      ],
+      щасливий: ["Привіт! Я прекрасно почуваюся, а ти?", "Вітаю. Ти як?", "Гей, я? Чудово, а ти як?"],
+      веселий: ["Привіт! Я прекрасно почуваюся, а ти?", "Вітаю. Ти як?", "Йо, супер, а ти?"],
+      спокійний: ["Привіт. Нормально, потихеньку. А ти?", "Вітаю. Спокійно. Як ти?", "Привіт. Я ок, дякую що питаєш."],
+      нейтральний: ["Привіт. Нормально. А ти?", "Вітаю. Як завжди. Ти як?", "Привіт. Більш-менш."],
+      сумний: ["Привіт... не найкраще, чесно. А ти?", "Вітаю. Трохи сумно. Як ти?", "Привіт. Тримаюсь. А ти як?"],
+      натхненний: ["Привіт! Натхнення є. А ти як?", "Вітаю. В драйві. Ти як?"],
+      творчий: ["Привіт! Творчий настрій. А ти?", "Вітаю. Щось крутиться в голові. Ти як?"],
+      соціальний: ["Привіт! Хочеться з кимось побути. Ти як?", "Вітаю! Я в ресурсі. А ти?"],
+      енергійний: ["Привіт! Повний заряд. А ти?", "Йо! Супер, а ти як?"],
+      тривожний: ["Привіт... трохи на нервах. А ти як?", "Вітаю. Не спокійно зовсім. Ти як?"],
+      панічний: ["Привіт... важко зараз. Ти як?", "Вітаю. Не найкращий момент, але радий що написала."],
+      закритий: ["Привіт. Норм.", "Вітаю. Я тут."],
+      апатія: ["Привіт... якось ніяк. А ти?", "Вітаю. Байдуже майже. Ти як?"],
+      байдужий: ["Привіт. Ок.", "Вітаю. Як завжди."],
+      злий: ["Привіт. Не в дусі.", "Вітаю. Краще коротко."],
+      роздратований: ["Привіт. Не дуже.", "Вітаю. Настрій так собі."]
+    };
+    if (byMood[mood]) return pick(byMood[mood]);
+    if (status) return pick([
+      "Привіт. Я зараз " + status + ". А ти як?",
+      "Привіт. Нормально, дякую що питаєш. А ти?"
+    ]);
+    return pick(["Привіт. Я ок, а ти?", "Вітаю. Добре, а ти як?", "Привіт! Як ти?"]);
+  }
+
+    craftAkiraReplyToYani(userMessage, mood, stage, status) {
     const msg = (userMessage || "").toLowerCase();
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
     /* Добраніч — взаємна відповідь (на випадок прямого виклику) */
     if (this.isYaniGoodnightMsg(msg)) return this.akiraGoodnightReply(stage);
+    /* Вітання / як справи / як почуваєшся — одразу з пулу привітань */
+    if (this.isYaniGreetingMsg(userMessage)) {
+      return this.akiraGreetingReply(mood, stage, status);
+    }
     if (/що робиш|чим займаєш|що там/.test(msg)) return status ? `Зараз ${status}.` : "Потихеньку свої справи.";
     if (/зустрі|пішли|побачен|прогул|кіно|кафе|велосипед|пляж/.test(msg)) {
       if (["злий", "роздратований", "закритий"].includes(mood)) return "Не сьогодні.";
@@ -1129,11 +1178,6 @@ class BotEngine {
     if (/малюю|стікер|тамагоч|ліплю|намисто|альбом/.test(msg)) {
       if (["злий", "роздратований", "закритий", "апатія"].includes(mood)) return "Не турбуй зараз, добре?";
       return pick(["Хотілося б глянути. Зустрінемось?", "Хочу подивитися на твої малюнки, зустрінемось?", "Покажеш?"]);
-    }
-    /* Хвиля-1 лише на чисте вітання, не на будь-який текст з «як ти» */
-    if (this.isYaniGreetingMsg(userMessage)) {
-      const greetPack = YA_CHAT.akira[mood]?.wave1 || YA_CHAT.akira.щасливий?.wave1 || ["Привіт. Я ок, а ти?"];
-      return pick(greetPack);
     }
     if (/сумн|боляче|так собі|сумую/.test(msg)) {
       if (["щасливий", "веселий", "закоханий", "спокійний", "нейтральний"].includes(mood)) {
@@ -1410,6 +1454,35 @@ class BotEngine {
     if (y.type === "married" && (y.mutual || y.locked)) return "married";
     if (y.type === "dating" && (y.mutual || y.locked)) return "dating";
     return "none";
+  }
+
+  yaDatingThreshold() {
+    return (typeof YA_MEETINGS_FOR_DATING === "number" ? YA_MEETINGS_FOR_DATING : 25);
+  }
+  yaMarriageThreshold() {
+    return (typeof YA_MEETINGS_FOR_MARRIAGE === "number" ? YA_MEETINGS_FOR_MARRIAGE : 50);
+  }
+  /** Чи можна пропонувати стосунки */
+  yaCanProposeDating() {
+    return this.yaStage() === "none" && this.countAkiraMeetings() >= this.yaDatingThreshold();
+  }
+  /** Чи можна пропонувати шлюб */
+  yaCanProposeMarriage() {
+    return this.yaStage() === "dating" && this.countAkiraMeetings() >= this.yaMarriageThreshold();
+  }
+  /** Репліки гілки dating/married — не показувати до unlock */
+  yaIsLockedBranchLine(text) {
+    const t = (text || "").toLowerCase();
+    return /що між нами|стосунки чи просто|одружимось|одруж|шлюб|назавжди|чоловіко|коханий привіт|сонечко|любчику|рідненький|ріднесенький|шпех|в ліжко з тобою|цілунк/i.test(t);
+  }
+  yaFilterLinesForStage(lines, stage) {
+    const arr = (lines || []).filter(Boolean);
+    if (stage === "married") return arr;
+    if (stage === "dating") {
+      return arr.filter(t => !/одружимось|одруж|чоловіко|шпех|в ліжко з тобою/i.test(t));
+    }
+    /* none — жодних гілкових романтичних формул */
+    return arr.filter(t => !this.yaIsLockedBranchLine(t));
   }
   yaIsNight() {
     const h = new Date().getHours();
@@ -1749,10 +1822,10 @@ class BotEngine {
         text = pack.wave1[Math.floor(Math.random() * pack.wave1.length)];
         this.yaDayFlags.akiraWave1 = true;
       } else if (!this.yaDayFlags.akiraWave2 && Math.random() > 0.55) {
-        const w2 = pack.wave2[stage] || pack.wave2.none || [];
+        const w2 = this.yaFilterLinesForStage(pack.wave2[stage] || pack.wave2.none || [], stage);
         if (w2.length) { text = w2[Math.floor(Math.random() * w2.length)]; this.yaDayFlags.akiraWave2 = true; }
       } else if (!this.yaDayFlags.akiraWave3 && Math.random() > 0.6) {
-        const w3 = pack.wave3[stage] || pack.wave3.none || [];
+        const w3 = this.yaFilterLinesForStage(pack.wave3[stage] || pack.wave3.none || [], stage);
         if (w3.length) { text = w3[Math.floor(Math.random() * w3.length)]; this.yaDayFlags.akiraWave3 = true; }
       } else if (stage === "married" && this.yaDayFlags.akiraWave4Count < 5 && Math.random() > 0.5) {
         const w4 = pack.wave4_married || [];
@@ -1800,12 +1873,23 @@ class BotEngine {
     const tree = DIALOGUE_TREES[`${fromId}_${toId}`] || null;
     if (!tree) return null;
     if (fromId === "yani" && toId === "akira") {
-      const need = tree.requiresMeetings || YA_MEETINGS_FOR_DATING || 25;
-      if (this.countAkiraMeetings() < need) return null;
-      if (this.yaStage() === "married") return null;
-      /* Уже в dating — дерево «що між нами» не потрібне; шлюб через extra trigger */
-      if (this.yaStage() === "dating") return tree;
-      if (this.yaStage() !== "none") return null;
+      const stage = this.yaStage();
+      if (stage === "married") return null;
+      /* Шлюбний вузол — лише в dating + поріг зустрічей */
+      if (stage === "dating") {
+        if (!this.yaCanProposeMarriage() && this.countAkiraMeetings() < this.yaMarriageThreshold()) {
+          /* дерево лишаємо для extras, але getDialogueOptions відсіє корінь */
+        }
+        return tree;
+      }
+      /* Пропозиція стосунків — лише none + поріг */
+      if (!this.yaCanProposeDating()) {
+        /* скинути застряглий стан дерева */
+        const key = `${fromId}_${toId}`;
+        if (this.dialogueState[key]) delete this.dialogueState[key];
+        return null;
+      }
+      return tree;
     }
     return tree;
   }
@@ -1831,13 +1915,28 @@ class BotEngine {
   }
 
   getDialogueOptions(fromId, toId) {
+    if (fromId === "yani" && toId === "akira") {
+      const stage = this.yaStage();
+      /* До unlock — жодного дерева */
+      if (stage === "none" && !this.yaCanProposeDating()) return null;
+      if (stage === "married") return null;
+      if (stage === "dating") {
+        /* корінь «що між нами» закритий; варіанти середини дерева — лише якщо вже в гілці після unlock */
+        const cur = this.getCurrentDialogueNode(fromId, toId);
+        if (!cur?.node) return null;
+        if (cur.nodeId === "start" || (cur.node.playerLine && /що між нами/i.test(cur.node.playerLine))) return null;
+        if (cur.node.playerLine && this.yaIsLockedBranchLine(cur.node.playerLine) && !this.yaCanProposeMarriage()) return null;
+        if (cur.node.responseOptions) {
+          return cur.node.responseOptions.map(o => ({ id: o.id, text: o.text, kind: "choice" }));
+        }
+        return null;
+      }
+    }
     const cur = this.getCurrentDialogueNode(fromId, toId);
     if (!cur?.node) return null;
-    /* У dating не показувати знову «що між нами» з кореня — лише гілку шлюбу через extras */
-    if (fromId === "yani" && toId === "akira" && this.yaStage() === "dating") {
-      if (cur.nodeId === "start" || cur.node?.playerLine?.includes("що між нами")) return null;
-    }
+    if (fromId === "yani" && toId === "akira" && !this.yaCanProposeDating() && this.yaStage() === "none") return null;
     if (cur.node.playerLine) {
+      if (fromId === "yani" && toId === "akira" && /одруж/i.test(cur.node.playerLine) && !this.yaCanProposeMarriage()) return null;
       return [{ id: cur.nodeId, text: cur.node.playerLine, kind: "line" }];
     }
     if (cur.node.responseOptions) {
@@ -1846,8 +1945,12 @@ class BotEngine {
     return null;
   }
 
-  /** Чи доступна спеціальна репліка-пропозиція (напр. шлюб) окремою кнопкою */
+  /** Шлюб / спецрепліки — лише після dating + поріг */
   getExtraDialogueTriggers(fromId, toId) {
+    if (fromId === "yani" && toId === "akira") {
+      if (!this.yaCanProposeMarriage()) return [];
+      return [{ id: "propose_marriage", text: "Акіро... я хочу, щоб ми були разом назавжди. Одружимось?" }];
+    }
     const tree = this.getActiveDialogueTree(fromId, toId);
     if (!tree) return [];
     const st = this.state[toId];
@@ -1874,8 +1977,29 @@ class BotEngine {
   }
 
   resolveDialogueChoice(fromId, toId, optionId) {
+    if (fromId === "yani" && toId === "akira") {
+      const stage = this.yaStage();
+      if (optionId === "propose_marriage" || optionId === "propose_marriage") {
+        if (!this.yaCanProposeMarriage()) return null;
+      }
+      if (stage === "none" && !this.yaCanProposeDating()) return null;
+      if (stage === "married") return null;
+    }
     const cur = this.getCurrentDialogueNode(fromId, toId);
-    if (!cur?.node) return null;
+    if (!cur?.node) {
+      /* шлюб як extra без поточного node */
+      if (fromId === "yani" && toId === "akira" && optionId === "propose_marriage" && this.yaCanProposeMarriage()) {
+        const tree = DIALOGUE_TREES["yani_akira"];
+        const node = tree?.nodes?.propose_marriage;
+        if (!node) return null;
+        const group = moodGroup(this.state[toId]?.mood);
+        const resp = node.responses[group] || node.responses.neutral || node.responses.positive;
+        if (!resp) return null;
+        if (resp.effect) this.applyDialogueEffect(fromId, toId, resp.effect);
+        return { playerText: node.playerLine, botText: resp.text, ended: !resp.next };
+      }
+      return null;
+    }
 
     // Текст репліки гравця дістаємо одразу, незалежно від доступності бота
     let playerText = null;

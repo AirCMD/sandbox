@@ -602,20 +602,39 @@ const UI = {
     const container = document.getElementById("quick-replies");
     const dialogueOptions = engine.getDialogueOptions(this.playerId, this.currentChatId);
     const extras = engine.getExtraDialogueTriggers(this.playerId, this.currentChatId);
+    const branchBtns = [...(dialogueOptions || []), ...(extras || []).map(e => ({ id: e.id, text: e.text, kind: "line" }))];
 
-    if (dialogueOptions || (extras && extras.length)) {
-      const all = [...(dialogueOptions || []), ...extras.map(e => ({ id: e.id, text: e.text, kind: "line" }))];
-      container.innerHTML = all.map(o => `<button data-dopt="${o.id}">${this.escape(o.text)}</button>`).join("");
+    /* Звичайні репліки завжди (для Yani↔Akira — вже відфільтровані по етапу) */
+    const replies = engine.getQuickReplies(this.playerId, this.currentChatId) || [];
+
+    /* Якщо є гілкові опції (стосунки/шлюб) — показуємо їх РАЗОМ зі звичайними, не замість */
+    if (branchBtns.length) {
+      const midTree = branchBtns.some(o => o.kind === "choice");
+      if (midTree) {
+        /* У середині дерева діалогу — лише варіанти вибору */
+        container.innerHTML = branchBtns.map(o =>
+          `<button data-dopt="${o.id}">${this.escape(o.text)}</button>`
+        ).join("");
+        container.onclick = (e) => {
+          const btn = e.target.closest("button[data-dopt]");
+          if (!btn) return;
+          this.sendDialogueChoice(btn.dataset.dopt);
+        };
+        return;
+      }
+      container.innerHTML =
+        branchBtns.map(o => `<button data-dopt="${o.id}">${this.escape(o.text)}</button>`).join("") +
+        replies.map(r => `<button data-plain="1">${this.escape(r)}</button>`).join("");
       container.onclick = (e) => {
-        const btn = e.target.closest("button[data-dopt]");
-        if (!btn) return;
-        this.sendDialogueChoice(btn.dataset.dopt);
+        const d = e.target.closest("button[data-dopt]");
+        if (d) { this.sendDialogueChoice(d.dataset.dopt); return; }
+        const plain = e.target.closest("button[data-plain]");
+        if (plain) this.sendMessage(plain.textContent);
       };
       return;
     }
 
-    const replies = engine.getQuickReplies(this.playerId, this.currentChatId);
-    container.innerHTML = replies.map(r => `<button>${r}</button>`).join("");
+    container.innerHTML = replies.map(r => `<button>${this.escape(r)}</button>`).join("");
     container.onclick = (e) => {
       if (e.target.tagName === "BUTTON") this.sendMessage(e.target.textContent);
     };

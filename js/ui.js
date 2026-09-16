@@ -669,7 +669,8 @@ const UI = {
 
     if (this.playerId === "yani" && this.currentChatId === "akira" && engine.yaDayFlags) {
       engine.yaEnsureDay?.();
-      if (/привіт|вітаю|геллоу|йо |як ти|як справи|як ся/i.test(text)) {
+      /* Лише чисте вітання відкриває «2-гу хвилю»; добраніч / звичайні репліки — ні */
+      if (engine.isYaniGreetingMsg?.(text)) {
         engine.yaDayFlags.yaniStartUsed = true;
       }
     }

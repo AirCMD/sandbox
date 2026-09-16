@@ -53,7 +53,8 @@ class BotEngine {
       akiraWave3: false,
       akiraWave4Count: 0,
       akiraRefusedOnce: false,
-      akiraInitiated: false
+      akiraInitiated: false,
+      akiraSaidGoodnight: false
     };
     this.loadStats();
     this.init();
@@ -952,6 +953,48 @@ class BotEngine {
     return { type: "reply", text, delay };
   }
 
+  /** Чи Яні бажає надобраніч / іде спати */
+  isYaniGoodnightMsg(msg) {
+    const m = (msg || "").toLowerCase().trim();
+    return /приємних\s*снів|солодких\s*снів|добраніч|доброї\s*ночі|до\s*завтра|до\s*зустрічі|чудової\s*ночі|приємної\s*ночі|йду\s*спати|час\s*спати|лягаю|надобраніч/i.test(m);
+  }
+
+  /** Чисте вітання (не частина довгої репліки) — щоб відповіді не ставали «хвилею» */
+  isYaniGreetingMsg(msg) {
+    const m = (msg || "").toLowerCase().trim();
+    if (this.isYaniGoodnightMsg(m)) return false;
+    // коротке вітання на початку, без іншої теми
+    return /^(привіт|привітики|вітаю|геллоу|гелло|хеллоу|йо|хай)\b/.test(m)
+      || /^(привіт|вітаю|йо).{0,8}(як ти|як справи|як ся|ти як)\b/.test(m)
+      || /^(як ти|як справи|як ся маєш|ти як)\??$/.test(m);
+  }
+
+  akiraGoodnightReply(stage) {
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    if (stage === "married") {
+      return pick([
+        "Солодких снів, кохана 💗",
+        "Добраніч. Цілую.",
+        "Приємних снів. Я поруч, навіть якщо онлайн.",
+        "Добраніч 💗 До завтра."
+      ]);
+    }
+    if (stage === "dating") {
+      return pick([
+        "Солодких снів, Яні.",
+        "Приємних снів. Напиши, як прокинешся.",
+        "Добраніч 😊",
+        "Спокійної ночі. До завтра."
+      ]);
+    }
+    return pick([
+      "Солодких снів.",
+      "Приємних снів.",
+      "Добраніч.",
+      "Спокійної ночі. До завтра."
+    ]);
+  }
+
   akiraMayReplyToYani(userMessage = "") {
     this.yaEnsureDay();
     const st = this.state.akira;
@@ -960,17 +1003,32 @@ class BotEngine {
     const status = st.status || "";
     const stage = this.yaStage();
     const msg = (userMessage || "").toLowerCase();
+
+    /* 1) Добраніч / сон Яні — завжди пріоритет над стрімом і «хвилями» */
+    if (this.isYaniGoodnightMsg(msg)) {
+      if (/^сплю$/i.test(status)) {
+        /* навіть якщо Акіра «спить» у статусі — коротка взаємна відповідь раз на ніч */
+      }
+      this.yaDayFlags.akiraSaidGoodnight = true;
+      return { type: "reply", text: this.akiraGoodnightReply(stage), delay: 1200 + Math.random() * 1800 };
+    }
+
     if (/^сплю$/i.test(status)) return { type: "offline" };
     if (YA_CHAT.akiraBlindBusy.test(status) && !YA_CHAT.akiraSoftBusy.test(status)) return { type: "offline" };
+
+    /* М'яка зайнятість: ОДНЕ повідомлення (без followUp-«хвилі»), хіба що не зла/закрита */
     if (YA_CHAT.akiraSoftBusy.test(status)) {
       const soft = YA_CHAT.akira.softBusyReplies;
+      const softText = soft[Math.floor(Math.random() * soft.length)];
+      /* одна відповідь: «секунду…» І тема в одному рядку, без другої хвилі */
+      const body = this.craftAkiraReplyToYani(userMessage, mood, stage, status);
       return {
         type: "reply",
-        text: soft[Math.floor(Math.random() * soft.length)],
-        delay: 1500,
-        followUp: { text: this.craftAkiraReplyToYani(userMessage, mood, stage, status), delay: 4000 + Math.random() * 4000 }
+        text: softText + ". " + body,
+        delay: 2000 + Math.random() * 2000
       };
     }
+
     if (["злий", "роздратований"].includes(mood)) {
       if (!this.yaDayFlags.akiraRefusedOnce) {
         this.yaDayFlags.akiraRefusedOnce = true;
@@ -985,6 +1043,8 @@ class BotEngine {
       if (Math.random() < 0.45) return { type: "typing_then_cancel" };
       if (Math.random() < 0.35) return { type: "ignore" };
     }
+
+    /* Стрім: не перебиває добраніч (вже оброблено вище); на звичайні — можна коротко */
     if (/стрім/i.test(status)) {
       const sacrificePool = YA_CHAT.akira.sacrificeStream;
       const canSacrifice = stage !== "none" || mood === "закоханий" || Math.random() > 0.55;
@@ -1006,7 +1066,8 @@ class BotEngine {
     if (["тривожний", "панічний"].includes(mood)) {
       text = text + (Math.random() > 0.5 ? " … трохи нервую." : " Серце б'ється швидше.");
     }
-    if (/привіт|вітаю|геллоу|йо |як ти|як справи/i.test(msg)) {
+    /* Хвиля старту — лише на чисте вітання, не на будь-яку репліку з «як ти» всередині */
+    if (this.isYaniGreetingMsg(userMessage)) {
       this.yaDayFlags.yaniStartUsed = true;
       this.yaDayFlags.yaniAfterGreet = true;
     }
@@ -1016,6 +1077,8 @@ class BotEngine {
   craftAkiraReplyToYani(userMessage, mood, stage, status) {
     const msg = (userMessage || "").toLowerCase();
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    /* Добраніч — взаємна відповідь (на випадок прямого виклику) */
+    if (this.isYaniGoodnightMsg(msg)) return this.akiraGoodnightReply(stage);
     if (/що робиш|чим займаєш|що там/.test(msg)) return status ? `Зараз ${status}.` : "Потихеньку свої справи.";
     if (/зустрі|пішли|побачен|прогул|кіно|кафе|велосипед|пляж/.test(msg)) {
       if (["злий", "роздратований", "закритий"].includes(mood)) return "Не сьогодні.";
@@ -1046,7 +1109,8 @@ class BotEngine {
       if (["злий", "роздратований", "закритий", "апатія"].includes(mood)) return "Не турбуй зараз, добре?";
       return pick(["Хотілося б глянути. Зустрінемось?", "Хочу подивитися на твої малюнки, зустрінемось?", "Покажеш?"]);
     }
-    if (/привіт|вітаю|геллоу|йо |як ти|як справи|як ся/.test(msg)) {
+    /* Хвиля-1 лише на чисте вітання, не на будь-який текст з «як ти» */
+    if (this.isYaniGreetingMsg(userMessage)) {
       const greetPack = YA_CHAT.akira[mood]?.wave1 || YA_CHAT.akira.щасливий?.wave1 || ["Привіт. Я ок, а ти?"];
       return pick(greetPack);
     }
@@ -1313,7 +1377,8 @@ class BotEngine {
       this.yaDayFlags = {
         yaniStartUsed: false, yaniAfterGreet: false,
         akiraWave1: false, akiraWave2: false, akiraWave3: false,
-        akiraWave4Count: 0, akiraRefusedOnce: false, akiraInitiated: false
+        akiraWave4Count: 0, akiraRefusedOnce: false, akiraInitiated: false,
+        akiraSaidGoodnight: false
       };
     }
   }
@@ -1627,16 +1692,35 @@ class BotEngine {
     if (YA_CHAT.akiraBlindBusy.test(st.status)) return;
     const mood = st.mood;
     const stage = this.yaStage();
+    const key = ["yani", "akira"].sort().join("_");
+    if (!this.messages[key]) this.messages[key] = [];
+
+    /* Яні вже спить / пішла спати — один раз побажати надобраніч (не стрім-хвилі) */
+    const yaniSt = this.state.yani;
+    if (yaniSt && (/^сплю$/i.test(yaniSt.status || "") || this.yaIsNight()) && !this.yaDayFlags.akiraSaidGoodnight) {
+      if (Math.random() > 0.35) {
+        const gn = this.akiraGoodnightReply(stage);
+        this.yaDayFlags.akiraSaidGoodnight = true;
+        this.yaDayFlags.akiraInitiated = true;
+        this.messages[key].push({ from: "akira", text: gn, read: true, ts: Date.now() });
+        if (typeof UI !== "undefined" && UI.currentChatId === "akira") {
+          try { UI.renderChatMessages(); } catch (_) {}
+        }
+        return;
+      }
+    }
+
     const positive = ["закоханий", "щасливий", "веселий", "соціальний", "енергійний"].includes(mood);
     if (!positive && stage === "none") return;
     if (this.yaDayFlags.akiraInitiated && stage !== "married") return;
-    const key = ["yani", "akira"].sort().join("_");
-    if (!this.messages[key]) this.messages[key] = [];
+    /* Вночі після добраніч — не слати флірт-хвилі */
+    if (this.yaDayFlags.akiraSaidGoodnight && this.yaIsNight()) return;
     let text = null;
     if (this.yaIsNight() && Math.random() > 0.4) {
       const night = YA_CHAT.akira.night;
       const pool = night[stage] || night.none || [];
       if (pool.length) text = pool[Math.floor(Math.random() * pool.length)];
+      this.yaDayFlags.akiraSaidGoodnight = true;
     } else if (mood === "закоханий") {
       const pack = YA_CHAT.akira.закоханий;
       if (!this.yaDayFlags.akiraWave1 && Math.random() > 0.5) {

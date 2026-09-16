@@ -276,7 +276,7 @@ class BotEngine {
     });
     // Сюжетні заготовки (не завжди взаємні)
     this._setRel("sayuri", "dating", "derek", false); // вона в статусі, він не підтвердив
-    this._setRel("akira", "dating", "yani", false);
+    // Акіра × Яні — лише через гілку зустрічей (не пресет dating)
     this._setRel("kent", "dating", "kate", Math.random() > 0.5);
     if (this.state.kent.relationship.mutual) {
       this._setRel("kate", "dating", "kent", true);
@@ -289,6 +289,23 @@ class BotEngine {
       this.state.jura.relationship.partnerId = "giki";
       this.state.jura.relationship.mutual = false;
     }
+    /* Яні — тільки single, поки гілка з Акірою не залочить dating/married */
+    if (this.state.yani) {
+      this.state.yani.relationship = {
+        type: "single", partnerId: null, mutual: true, hidden: false,
+        lastChange: Date.now(), locked: false
+      };
+      this.state.yani.relChangePolicy = "never";
+    }
+    /* Ніхто не «зустрічається» з Яні без lockYaRelationship */
+    CHARACTERS.forEach(c => {
+      const r = this.state[c.id]?.relationship;
+      if (r && r.partnerId === "yani" && !r.locked) {
+        r.type = "single";
+        r.partnerId = null;
+        r.mutual = true;
+      }
+    });
   }
 
   _setRel(id, type, partnerId, mutual) {
@@ -356,6 +373,8 @@ class BotEngine {
   }
 
   maybeChangeRelationship(charId) {
+    /* Гравець Яні — стосунки лише через гілку з Акірою */
+    if (charId === "yani") return;
     const st = this.state[charId];
     if (!st?.relationship) return;
     if (st.relationship.locked) return;
@@ -363,7 +382,7 @@ class BotEngine {
     if (policy === "never") return;
     const elapsed = Date.now() - (st.relationship.lastChange || 0);
     if (elapsed < this.policyMs(policy)) return;
-    if (Math.random() > 0.4) return; // не завжди хочуть міняти навіть коли можна
+    if (Math.random() > 0.4) return;
 
     const types = Object.keys(RELATIONSHIP_TYPES).filter(t => this.canChooseType(charId, t));
     if (!types.length) return;
@@ -374,16 +393,16 @@ class BotEngine {
     let hidden = type === "hidden" || Math.random() > 0.85;
 
     if (def.needsPartner && type !== "hidden") {
-      const cands = this.partnerCandidates(charId, type);
+      /* Яні не може стати випадковою партнеркою ботів */
+      const cands = this.partnerCandidates(charId, type).filter(id => id !== "yani");
       if (!cands.length) return;
       partnerId = cands[Math.floor(Math.random() * cands.length)];
+      if (this.state[partnerId]?.relationship?.locked) return;
       if (def.needsMutual) {
-        // згода партнера ~55%
         mutual = Math.random() > 0.45;
         if (mutual) {
-          // синхронізувати партнера
           const pst = this.state[partnerId];
-          if (pst) {
+          if (pst && !pst.relationship?.locked && partnerId !== "yani") {
             pst.relationship = {
               type,
               partnerId: charId,
@@ -391,6 +410,8 @@ class BotEngine {
               hidden: false,
               lastChange: Date.now()
             };
+          } else {
+            mutual = false;
           }
         }
       } else {
@@ -762,7 +783,6 @@ class BotEngine {
     if (/стрім|ігр|сетап|навуш/.test(blob)) add(["Який мікрофон?", "Сетап вогонь", "Коли наступний стрім?"]);
     if (/дощ|вікно|настрій|самот/.test(blob)) add(["Настрій відчувається", "Тиша після дощу особлива", "Гарний кадр, навіть якщо сумно"]);
     if (/барахол|короб|продаж/.test(blob)) add(["Що цікавого в партії?", "Ціна нормальна була?", "Люблю такі знахідки"]);
-    if (/звіропуд/.test(blob)) add(["Грубо", "Кейт, ти хвора на голову", "Нда"]);
     if (/снек|журнал|пакет/.test(blob)) add(["Смішний колаж", "Скільки вже пакетів?", "Це вже мистецтво"]);
     add(["Дякую, що показала/показав", "Зберегла/зберіг у голові", "Дуже атмосферно", "Під цим можу підписатись"]);
     const gender = (typeof UI !== "undefined" && UI.playerId) ? (this.getCharacter(UI.playerId)?.gender || "f") : "f";
@@ -1384,12 +1404,11 @@ class BotEngine {
     }
   }
   yaStage() {
-    const a = this.state.akira?.relationship;
+    /* Лише офіційні взаємні/залочені стосунки Яні → Акіра (не однобічний пресет Акіри) */
     const y = this.state.yani?.relationship;
-    if (a?.type === "married" && a.partnerId === "yani") return "married";
-    if (y?.type === "married" && y.partnerId === "akira") return "married";
-    if (a?.type === "dating" && a.partnerId === "yani") return "dating";
-    if (y?.type === "dating" && y.partnerId === "akira") return "dating";
+    if (!y || y.partnerId !== "akira") return "none";
+    if (y.type === "married" && (y.mutual || y.locked)) return "married";
+    if (y.type === "dating" && (y.mutual || y.locked)) return "dating";
     return "none";
   }
   yaIsNight() {
@@ -1399,7 +1418,9 @@ class BotEngine {
   yaPickPool(poolObj, stage) {
     if (!poolObj) return [];
     if (poolObj.all) return [...poolObj.all];
-    return [...(poolObj[stage] || poolObj.none || [])];
+    const s = stage === "married" || stage === "dating" ? stage : "none";
+    if (poolObj[s] && poolObj[s].length) return [...poolObj[s]];
+    return [...(poolObj.none || [])];
   }
   countAkiraMeetings() { return this.stats.akira_meetings || 0; }
 
@@ -1778,9 +1799,13 @@ class BotEngine {
   getActiveDialogueTree(fromId, toId) {
     const tree = DIALOGUE_TREES[`${fromId}_${toId}`] || null;
     if (!tree) return null;
-    if (tree.requiresMeetings && fromId === "yani" && toId === "akira") {
-      if (this.countAkiraMeetings() < tree.requiresMeetings) return null;
+    if (fromId === "yani" && toId === "akira") {
+      const need = tree.requiresMeetings || YA_MEETINGS_FOR_DATING || 25;
+      if (this.countAkiraMeetings() < need) return null;
       if (this.yaStage() === "married") return null;
+      /* Уже в dating — дерево «що між нами» не потрібне; шлюб через extra trigger */
+      if (this.yaStage() === "dating") return tree;
+      if (this.yaStage() !== "none") return null;
     }
     return tree;
   }
@@ -1808,6 +1833,10 @@ class BotEngine {
   getDialogueOptions(fromId, toId) {
     const cur = this.getCurrentDialogueNode(fromId, toId);
     if (!cur?.node) return null;
+    /* У dating не показувати знову «що між нами» з кореня — лише гілку шлюбу через extras */
+    if (fromId === "yani" && toId === "akira" && this.yaStage() === "dating") {
+      if (cur.nodeId === "start" || cur.node?.playerLine?.includes("що між нами")) return null;
+    }
     if (cur.node.playerLine) {
       return [{ id: cur.nodeId, text: cur.node.playerLine, kind: "line" }];
     }
